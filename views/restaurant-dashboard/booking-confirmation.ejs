@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= pageTitle %> - QuickSEAT</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/booking-confirmation.css">
+</head>
+<body>
+    <%- include('../includes/navbar') %> <!-- FIXED: Adjusted path to climb out of the sub-directory -->
+
+    <div class="confirmation-container">
+        <div class="confirmation-header">✓</div>
+        <h2>Booking Successful!</h2>
+        <p class="status-badge">Status: Pending Approval</p>
+
+        <% if (locals.success) { %>
+            <div class="alert alert-success" style="margin-bottom: 20px;">
+                <%= locals.success %>
+            </div>
+        <% } %>
+
+        <div class="confirmation-card">
+            <h3 style="margin-top: 0;"><%= restaurant.name %></h3>
+            
+            <div class="detail-row">
+                <span class="detail-label">Restaurant Address:</span>
+                <span><%= restaurant.address %></span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Date & Time:</span>
+                <span>
+                    <%= new Date(booking.dateTime).toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' }) %>
+                    at 
+                    <%= new Date(booking.dateTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) %>
+                </span>
+            </div>
+
+            <div class="detail-row">
+                <span class="detail-label">Party Size:</span>
+                <span><%= booking.partySize %> Guests</span>
+            </div>
+            
+            <% if (booking.notes) { %>
+            <div class="detail-row">
+                <span class="detail-label">Special Notes:</span>
+                <span><%= booking.notes %></span>
+            </div>
+            <% } %>
+        </div>
+
+        <p>You will receive an email confirmation once the restaurant approves your booking.</p>
+
+        <div class="action-buttons">
+            <a href="/restaurants" class="btn-action btn-home">
+                Back to Home
+            </a>
+            <a href="/my-bookings" class="btn-action btn-bookings">
+                View All My Bookings
+            </a>
+        </div>
+    </div>
+
+    <%- include('../includes/footer') %> <!-- FIXED: Adjusted path to climb out of the sub-directory -->
+
+    <script>
+    function handleStatusChange(reservationId, newStatus) {
+        const action = newStatus === 'approved' ? 'approve' : 'reject';
+        if (!confirm(`Are you sure you want to ${action} this reservation?`)) {
+            return;
+        }
+
+        fetch(`/reservations/${reservationId}/status`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                // Add if using sessions: 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
+            },
+            body: JSON.stringify({ status: newStatus })
+        })
+        .then(response => {
+            if (!response.ok) {
+                // NEW: Check if response is HTML (common error case)
+                return response.text().then(text => {
+                    throw new Error(`Server error ${response.status}: ${text.substring(0, 200)}... (Likely missing route or auth issue)`);
+                });
+            }
+            // NEW: Safely parse JSON, handle non-JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                throw new Error('Server returned non-JSON response (e.g., HTML error page)');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                window.location.reload(); // Refresh to show updates
+            } else {
+                alert('Failed to update: ' + (data.message || 'Unknown server error'));
+            }
+        })
+        .catch(error => {
+            console.error('Status update error:', error);
+            alert(`Update failed: ${error.message}\n\nCheck browser console (F12 > Console) for details. Common fix: Ensure server route exists.`);
+        });
+    }
+
+    // Event listeners (ensure they match your dashboard HTML classes)
+    document.addEventListener('DOMContentLoaded', () => {
+        // UPDATED: More flexible selector for your board/buttons from screenshots
+        const approveButtons = document.querySelectorAll('[data-action="approve"], .btn-approve');
+        const rejectButtons = document.querySelectorAll('[data-action="reject"], .btn-reject');
+
+        approveButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const id = btn.getAttribute('data-id') || btn.closest('.booking-card').getAttribute('data-id'); // Fallback selector
+                handleStatusChange(id, 'approved');
+            });
+        });
+
+        rejectButtons.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const id = btn.getAttribute('data-id') || btn.closest('.booking-card').getAttribute('data-id');
+                handleStatusChange(id, 'declined'); // Matches your model logic
+            });
+        });
+    });
+</script>
+</body>
+</html>

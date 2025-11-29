@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= restaurant.name %> - QuickSEAT</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <style>
+      /* Image Gallery Section */
+      .image-gallery {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        grid-template-rows: auto auto;
+        gap: 12px;
+        margin: 24px 0;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+      }
+
+      .gallery-main,
+      .gallery-thumb {
+        position: relative;
+        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .gallery-main {
+        grid-row: 1 / 3;
+      }
+
+      .gallery-main img,
+      .gallery-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+        transition: transform 0.3s ease;
+      }
+
+      .gallery-thumb {
+        height: 180px;
+      }
+
+      .gallery-thumb:hover img {
+        transform: scale(1.05);
+      }
+
+      .more-images {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.8rem;
+        font-weight: 600;
+        backdrop-filter: blur(2px);
+        cursor: pointer;
+      }
+
+      .image-placeholder {
+        background: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #aaa;
+      }
+
+      /* Lightbox Modal - Transparent & Blurred Background */
+      .lightbox {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.35); /* Semi-transparent dark */
+        backdrop-filter: blur(
+          12px
+        ); /* Strong blur so page is visible but soft */
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        padding: 6vh 6vw; /* Generous padding = visible space around image */
+        opacity: 0;
+        transition: opacity 0.35s ease;
+      }
+
+      .lightbox.active {
+        display: flex;
+        opacity: 1;
+      }
+
+      .lightbox-content {
+        position: relative;
+        max-width: 85%; /* Reduced to show more background */
+        max-height: 85vh;
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.3);
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(8px);
+      }
+
+      .lightbox-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        animation: popIn 0.45s cubic-bezier(0.25, 0.8, 0.25, 1);
+      }
+
+      @keyframes popIn {
+        0% {
+          transform: scale(0.75);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .lightbox-close {
+        position: absolute;
+        top: 18px;
+        right: 18px;
+        font-size: 2.4rem;
+        color: white;
+        background: rgba(255, 255, 255, 0.18);
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        z-index: 10;
+        backdrop-filter: blur(6px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      }
+
+      .lightbox-close:hover {
+        background: rgba(255, 255, 255, 0.35);
+        transform: scale(1.1);
+      }
+
+      /* Navigation Arrows */
+      .lightbox-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 60px;
+        height: 60px;
+        background: rgba(255, 255, 255, 0.15);
+        color: white;
+        font-size: 2.4rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        user-select: none;
+        z-index: 10;
+        backdrop-filter: blur(6px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+      }
+
+      .lightbox-nav:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateY(-50%) scale(1.12);
+      }
+
+      .lightbox-prev {
+        left: 30px;
+      }
+      .lightbox-next {
+        right: 30px;
+      }
+
+      @media (max-width: 768px) {
+        .image-gallery {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto auto auto;
+        }
+        .gallery-main {
+          grid-row: 1;
+          height: 280px;
+        }
+        .gallery-thumb {
+          height: 120px;
+        }
+        .lightbox {
+          padding: 4vh 4vw;
+        }
+        .lightbox-content {
+          max-width: 92%;
+          max-height: 80vh;
+        }
+        .lightbox-nav {
+          width: 48px;
+          height: 48px;
+          font-size: 1.8rem;
+        }
+        .lightbox-prev {
+          left: 15px;
+        }
+        .lightbox-next {
+          right: 15px;
+        }
+        .lightbox-close {
+          top: 12px;
+          right: 12px;
+          width: 40px;
+          height: 40px;
+          font-size: 2rem;
+        }
+      }
+      /* --- ADD MENU MODAL --- */
+      .menu-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(6px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+      }
+
+      .menu-modal.active {
+        display: flex;
+        animation: fadeIn 0.3s ease;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .menu-modal-content {
+        background: #fff;
+        border-radius: 16px;
+        padding: 30px;
+        width: 90%;
+        max-width: 900px;
+        max-height: 85vh;
+        overflow-y: auto;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+        position: relative;
+        animation: popIn 0.35s ease;
+      }
+
+      @keyframes popIn {
+        from {
+          transform: scale(0.9);
+          opacity: 0;
+        }
+        to {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .menu-modal-close {
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-size: 1.6rem;
+        color: #444;
+        background: #eee;
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: 0.2s;
+      }
+
+      .menu-modal-close:hover {
+        background: #ddd;
+        transform: scale(1.1);
+      }
+
+      .menu-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        justify-content: center;
+        margin-top: 20px;
+      }
+
+      .menu-card {
+        width: 200px;
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+
+      .menu-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+      }
+
+      .menu-card img {
+        width: 100%;
+        height: 130px;
+        object-fit: cover;
+      }
+
+      .menu-info {
+        padding: 10px;
+        text-align: center;
+      }
+
+      .menu-info h4 {
+        margin: 5px 0;
+        font-size: 1rem;
+        color: #333;
+      }
+
+      .menu-info p {
+        margin: 2px 0;
+        color: #777;
+        font-size: 0.9rem;
+      }
+
+      .menu-info input {
+        margin-top: 6px;
+        transform: scale(1.2);
+        accent-color: #5b6ef5;
+        cursor: pointer;
+      }
+
+      .add-menu-btn {
+        display: inline-block;
+        background: #5b6ef5;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        cursor: pointer;
+        margin-top: 15px;
+        font-weight: 500;
+        transition: 0.3s;
+      }
+
+      .add-menu-btn:hover {
+        background: #4a5dd0;
+        transform: translateY(-2px);
+      }
+
+      .menu-title {
+        font-size: 1.4rem;
+        text-align: center;
+        margin-bottom: 15px;
+        color: #333;
+      }
+
+      .no-menu {
+        text-align: center;
+        color: #777;
+        margin-top: 30px;
+        font-size: 1rem;
+      }
+      ,
+      .menu-container {
+        display: flex;
+        gap: 20px;
+        flex-wrap: wrap;
+        transition: all 0.3s ease-in-out;
+      }
+      .dish-card {
+        transition: transform 0.3s, opacity 0.3s;
+      }
+      .sort-btn {
+        background-color: #5a67d8;
+        color: white;
+        border: none;
+        padding: 10px 18px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 500;
+      }
+
+      .sort-dropdown {
+        position: absolute;
+        top: 48px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: white;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        box-shadow: 0px 5px 20px rgba(0, 0, 0, 0.1);
+        width: 260px;
+        padding: 15px;
+        z-index: 20;
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .dropdown-section {
+        text-align: left;
+        margin-bottom: 12px;
+      }
+
+      .dropdown-section h4 {
+        font-size: 14px;
+        margin-bottom: 5px;
+        color: #333;
+      }
+
+      .dropdown-section select {
+        width: 100%;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      .apply-btn {
+        width: 100%;
+        padding: 8px;
+        background-color: #48bb78;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+
+      .apply-btn:hover {
+        background-color: #38a169;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include('../includes/navbar') %>
+
+    <!-- Lightbox Modal -->
+    <div class="lightbox" id="lightbox">
+      <div class="lightbox-close" id="closeBtn">x</div>
+      <img src="" alt="Popup" class="lightbox-img" id="lightboxImg" />
+    </div>
+
+    <section class="show-section">
+      <div class="container">
+        <div class="show-wrapper">
+          <!-- Image Gallery -->
+          <% const allImages = [restaurant.mainImage,
+          ...(restaurant.galleryImages || [])].filter(img => img); const total =
+          allImages.length; %> <% if (total > 0) { %>
+          <div class="image-gallery" id="imageGallery">
+            <!-- Main Image (Big) -->
+            <div class="gallery-main" data-src="<%= restaurant.mainImage %>">
+              <% if (restaurant.mainImage) { %>
+              <img
+                src="<%= restaurant.mainImage %>"
+                alt="<%= restaurant.name %>"
+              />
+              <% } else { %>
+              <div class="image-placeholder">Photo</div>
+              <% } %>
+            </div>
+
+            <!-- Second Image -->
+            <% if (total >= 2) { %>
+            <div class="gallery-thumb" data-src="<%= allImages[1] %>">
+              <img src="<%= allImages[1] %>" alt="Gallery 1" />
+            </div>
+            <% } %>
+
+            <!-- Third Slot: Image or +X -->
+            <% if (total >= 3) { %>
+            <div class="gallery-thumb" data-src="<%= allImages[2] %>">
+              <% if (total === 3) { %>
+              <img src="<%= allImages[2] %>" alt="Gallery 2" />
+              <% } else { %>
+              <img
+                src="<%= allImages[2] %>"
+                alt="More"
+                style="filter: brightness(0.7)"
+              />
+              <div class="more-images" id="moreTrigger">+<%= total - 2 %></div>
+              <% } %>
+            </div>
+            <% } %>
+          </div>
+          <% } %>
+
+          <!-- Restaurant Info -->
+          <div class="show-info" style="margin-top: 20px">
+            <h1 class="show-title"><%= restaurant.name %></h1>
+            <p class="show-address">Location: <%= restaurant.address %></p>
+            <div class="show-meta">
+              <span class="meta-item"
+                ><strong>Total Tables:</strong> <%= restaurant.totalTables
+                %></span
+              >
+              <span class="meta-item"
+                ><strong>Max Party Size:</strong> <%= restaurant.maxPartySize %>
+                guests</span
+              >
+            </div>
+          </div>
+
+          <!-- Booking Section -->
+          <div class="booking-section-show">
+            <h2>Make a Reservation</h2>
+            <form
+              action="/reservations"
+              method="POST"
+              class="booking-form-show"
+            >
+              <input
+                type="hidden"
+                name="restaurantId"
+                value="<%= restaurant._id %>"
+              />
+              <input
+                type="hidden"
+                name="restaurantName"
+                value="<%= restaurant.name %>"
+              />
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="booking-date"
+                    >Date <span class="required">*</span></label
+                  >
+                  <input type="date" id="booking-date" name="date" required />
+                </div>
+                <div class="form-group">
+                  <label for="booking-time"
+                    >Time <span class="required">*</span></label
+                  >
+                  <select id="booking-time" name="time" required>
+                    <option value="">Select time</option>
+                    <option value="11:00">11:00 AM</option>
+                    <option value="11:30">11:30 AM</option>
+                    <option value="12:00">12:00 PM</option>
+                    <option value="12:30">12:30 PM</option>
+                    <option value="13:00">1:00 PM</option>
+                    <option value="13:30">1:30 PM</option>
+                    <option value="14:00">2:00 PM</option>
+                    <option value="17:00">5:00 PM</option>
+                    <option value="17:30">5:30 PM</option>
+                    <option value="18:00">6:00 PM</option>
+                    <option value="18:30">6:30 PM</option>
+                    <option value="19:00">7:00 PM</option>
+                    <option value="19:30">7:30 PM</option>
+                    <option value="20:00">8:00 PM</option>
+                    <option value="20:30">8:30 PM</option>
+                    <option value="21:00">9:00 PM</option>
+                    <option value="21:30">9:30 PM</option>
+                    <option value="22:00">10:00 PM</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="booking-guests"
+                    >Guests <span class="required">*</span></label
+                  >
+                  <select id="booking-guests" name="guests" required>
+                    <option value="">Select guests</option>
+                    <% for(let i = 1; i <= restaurant.maxPartySize; i++) { %>
+                    <option value="<%= i %>">
+                      <%= i %> <%= i === 1 ? 'Guest' : 'Guests' %>
+                    </option>
+                    <% } %>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="booking-name"
+                  >Your Name <span class="required">*</span></label
+                >
+                <input
+                  type="text"
+                  id="booking-name"
+                  name="customerName"
+                  placeholder="Enter your name"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="booking-phone"
+                  >Phone Number <span class="required">*</span></label
+                >
+                <input
+                  type="tel"
+                  id="booking-phone"
+                  name="phone"
+                  placeholder="Enter your phone number"
+                  required
+                />
+              </div>
+              <div class="form-group">
+                <label for="booking-notes">Special Requests (Optional)</label>
+                <textarea
+                  id="booking-notes"
+                  name="specialRequests"
+                  rows="3"
+                  placeholder="Any special requests..."
+                ></textarea>
+              </div>
+
+              <button type="button" class="add-menu-btn" id="openMenuBtn">
+                🍽️ Add Menu Items
+              </button>
+
+              <button type="submit" class="btn-primary btn-full">
+                Book Now
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="menu-modal" id="menuModal">
+      <div class="menu-modal-content">
+        <div class="menu-modal-close" id="closeMenu">×</div>
+        <h3 class="menu-title">Select Your Favorite Dishes</h3>
+
+        <!-- Sort & Filter Button -->
+        <div
+          class="sort-dropdown-container"
+          style="position: relative; text-align: center; margin-bottom: 15px"
+        >
+          <button id="sortFilterBtn" class="sort-btn">Sort & Filter ▾</button>
+
+          <div id="sortDropdown" class="sort-dropdown hidden">
+            <div class="dropdown-section">
+              <h4>Cuisine</h4>
+              <select id="filterCuisine">
+                <option value="">All</option>
+                <option value="Indian">Indian</option>
+                <option value="Chinese">Chinese</option>
+                <option value="Italian">Italian</option>
+                <option value="Continental">Continental</option>
+              </select>
+            </div>
+
+            <div class="dropdown-section">
+              <h4>Type</h4>
+              <select id="filterType">
+                <option value="">All</option>
+                <option value="veg">Veg</option>
+                <option value="non-veg">Non-Veg</option>
+              </select>
+            </div>
+
+            <div class="dropdown-section">
+              <h4>Price</h4>
+              <select id="filterPrice">
+                <option value="">None</option>
+                <option value="lowToHigh">Low to High</option>
+                <option value="highToLow">High to Low</option>
+              </select>
+            </div>
+
+            <button id="applyFilters" class="apply-btn">Apply</button>
+          </div>
+        </div>
+
+        <% if (menuItems && menuItems.length > 0) { %>
+        <div class="menu-grid" id="menuContainer">
+          <% menuItems.forEach(item => { %>
+          <div
+            class="menu-card"
+            data-cuisine="<%= item.cuisine %>"
+            data-type="<%= item.type %>"
+            data-price="<%= item.price %>"
+          >
+            <img
+              src="<%= item.image ? item.image : '/images/default-food.jpg' %>"
+              alt="<%= item.dishName %>"
+            />
+            <div class="menu-info">
+              <h4><%= item.dishName %></h4>
+              <p><%= item.cuisine %> | <%= item.type %></p>
+              <p><strong>₹<%= item.price %></strong></p>
+              <input
+                type="checkbox"
+                name="menuItems"
+                value="<%= item._id %>"
+                form="booking-form"
+              />
+            </div>
+          </div>
+          <% }) %>
+        </div>
+        <% } else { %>
+        <div class="no-menu">No menu items available for this restaurant.</div>
+        <% } %>
+      </div>
+    </div>
+
+    <%- include('../includes/footer') %>
+
+    <script>
+      // Set minimum date to today
+      const dateInput = document.getElementById("booking-date");
+      const today = new Date().toISOString().split("T")[0];
+      dateInput.setAttribute("min", today);
+      dateInput.value = today;
+
+      // Modal functionality
+      const menuModal = document.getElementById("menuModal");
+      const openMenuBtn = document.getElementById("openMenuBtn");
+      const closeMenu = document.getElementById("closeMenu");
+
+      // Lightbox Functionality
+      const lightbox = document.getElementById("lightbox");
+      const lightboxImg = document.getElementById("lightboxImg");
+      const closeBtn = document.getElementById("closeBtn");
+
+      // ----- ✅ SORT & FILTER SCRIPT (Updated) -----
+      const sortBtn = document.getElementById("sortFilterBtn");
+      const sortDropdown = document.getElementById("sortDropdown");
+      const applyBtn = document.getElementById("applyFilters");
+      const menuContainer = document.getElementById("menuContainer");
+      let dishes = Array.from(menuContainer.children);
+
+      // Toggle dropdown visibility
+      sortBtn.addEventListener("click", () => {
+        sortDropdown.classList.toggle("hidden");
+      });
+
+      // Close dropdown when clicking outside
+      window.addEventListener("click", (e) => {
+        if (!sortBtn.contains(e.target) && !sortDropdown.contains(e.target)) {
+          sortDropdown.classList.add("hidden");
+        }
+      });
+
+      // Apply filters
+      applyBtn.addEventListener("click", () => {
+        const cuisine = document.getElementById("filterCuisine").value;
+        const type = document.getElementById("filterType").value;
+        const priceSort = document.getElementById("filterPrice").value;
+
+        let filtered = dishes.filter((dish) => {
+          const dishCuisine = dish.dataset.cuisine;
+          const dishType = dish.dataset.type;
+
+          let cuisineMatch = cuisine ? dishCuisine === cuisine : true;
+          let typeMatch = type ? dishType === type : true;
+
+          return cuisineMatch && typeMatch;
+        });
+
+        if (priceSort === "lowToHigh") {
+          filtered.sort((a, b) => a.dataset.price - b.dataset.price);
+        } else if (priceSort === "highToLow") {
+          filtered.sort((a, b) => b.dataset.price - a.dataset.price);
+        }
+
+        menuContainer.innerHTML = "";
+        filtered.forEach((dish) => menuContainer.appendChild(dish));
+
+        sortDropdown.classList.add("hidden");
+      });
+
+      // ----- Modal open/close -----
+      openMenuBtn.addEventListener("click", () =>
+        menuModal.classList.add("active")
+      );
+      closeMenu.addEventListener("click", () =>
+        menuModal.classList.remove("active")
+      );
+      menuModal.addEventListener("click", (e) => {
+        if (e.target === menuModal) menuModal.classList.remove("active");
+      });
+
+      // ----- Lightbox -----
+      function openLightbox(src) {
+        lightboxImg.src = src;
+        lightbox.classList.add("active");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeLightbox() {
+        lightbox.classList.remove("active");
+        setTimeout(() => {
+          lightboxImg.src = "";
+        }, 300);
+        document.body.style.overflow = "";
+      }
+
+      document
+        .querySelectorAll(".gallery-main, .gallery-thumb")
+        .forEach((el) => {
+          el.addEventListener("click", () => {
+            const src = el.getAttribute("data-src");
+            if (src) openLightbox(src);
+          });
+        });
+
+      const moreTrigger = document.getElementById("moreTrigger");
+      if (moreTrigger) {
+        moreTrigger.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const src = moreTrigger.parentElement.getAttribute("data-src");
+          if (src) openLightbox(src);
+        });
+      }
+
+      closeBtn.addEventListener("click", closeLightbox);
+      lightbox.addEventListener("click", (e) => {
+        if (e.target === lightbox) closeLightbox();
+      });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && lightbox.classList.contains("active")) {
+          closeLightbox();
+        }
+      });
+    </script>
+  </body>
+</html>

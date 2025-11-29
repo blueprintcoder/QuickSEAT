@@ -1,0 +1,125 @@
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="nav-brand">
+            <a href="/">🍽️ QuickSEAT</a>
+        </div>
+        <ul class="nav-links">
+            <li><a href="/restaurants#all-restaurants-list">All Restaurants</a></li>
+
+            <% if (locals.currentUser) { %>
+                <li><a href="/my-bookings">My Bookings</a></li>
+            <% } %>
+
+            <% 
+            // FIX: The "Add Restaurant" button must show if a User is logged in 
+            // AND they are NOT currently in the dedicated Restaurant Dashboard session.
+            if (locals.currentUser && !locals.isRestaurantManager) { 
+            %>
+                <li><a href="/restaurants/new" class="btn-primary-small">Add Restaurant</a></li>
+            <% } %>
+            
+            <% if (locals.isRestaurantManager) { %>
+                <li><a href="/restaurant-dashboard" class="btn-primary-small">Dashboard</a></li>
+            <% } %>
+        </ul>
+
+        <div class="nav-auth">
+            <% if (locals.isRestaurantManager) { %>
+                <div class="user-menu">
+                    <span class="user-greeting">🍴 <%= locals.restaurantName %></span>
+                    <a href="/logout" class="btn-logout-nav">Logout</a>
+                </div>
+            <% } else if (locals.currentUser) { %>
+                <div class="user-menu">
+                    <span class="user-greeting">👤 <%= locals.currentUser.fullName %></span>
+                    <a href="/logout" class="btn-logout-nav">Logout</a>
+                </div>
+            <% } else { %>
+                <a href="/login" class="btn-login-nav">Login</a>
+                <a href="/signup" class="btn-signup-nav">Sign Up</a>
+            <% } %>
+        </div>
+    </div>
+</nav>
+
+<style>
+/* Additional navbar styles for auth */
+.nav-auth {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.user-greeting {
+    color: #333;
+    font-weight: 600;
+}
+
+.btn-login-nav,
+.btn-signup-nav,
+.btn-logout-nav {
+    padding: 0.6rem 1.5rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-login-nav {
+    color: #667eea;
+    border: 2px solid #667eea;
+    background-color: white;
+}
+
+.btn-login-nav:hover {
+    background-color: #667eea;
+    color: white;
+}
+
+.btn-signup-nav {
+    background-color: #e74c3c;
+    color: white;
+    border: 2px solid #e74c3c;
+}
+
+.btn-signup-nav:hover {
+    background-color: #c0392b;
+    border-color: #c0392b;
+}
+
+.btn-logout-nav {
+    background-color: #95a5a6;
+    color: white;
+    border: 2px solid #95a5a6;
+}
+
+.btn-logout-nav:hover {
+    background-color: #7f8c8d;
+    border-color: #7f8c8d;
+}
+
+@media (max-width: 768px) {
+    .nav-auth {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .user-menu {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .btn-login-nav,
+    .btn-signup-nav,
+    .btn-logout-nav {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>

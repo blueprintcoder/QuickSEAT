@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Manager Dashboard' %> - QuickSEAT</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/manager.css">
+</head>
+<body class="manager-body">
+
+    <aside class="manager-sidebar">
+        <div class="sidebar-header">
+            <div class="logo">
+                <h2>🍽️ QuickSEAT</h2>
+                <span class="manager-badge">Manager</span>
+            </div>
+        </div>
+
+        <nav class="sidebar-nav">
+            <ul>
+                <li>
+                    <a href="/manager/dashboard" class="<%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">
+                        <span class="nav-icon">📊</span>
+                        <span class="nav-text">Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/restaurant-dashboard/reservations" class="<%= typeof activePage !== 'undefined' && activePage === 'reservations' ? 'active' : '' %>">
+                        <span class="nav-icon">📅</span>
+                        <span class="nav-text">Reservations</span>
+                        <% if (typeof pendingCount !== 'undefined' && pendingCount > 0) { %>
+                            <span class="notification-badge"><%= pendingCount %></span>
+                        <% } %>
+                    </a>
+                </li>
+                <li>
+                    <a href="/restaurant-dashboard/guests" class="<%= typeof activePage !== 'undefined' && activePage === 'guests' ? 'active' : '' %>">
+                        <span class="nav-icon">👥</span>
+                        <span class="nav-text">Guests</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/manager/settings" class="<%= typeof activePage !== 'undefined' && activePage === 'settings' ? 'active' : '' %>">
+                        <span class="nav-icon">⚙️</span>
+                        <span class="nav-text">Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="/" class="btn-back-home">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-text">Back to Customer Site</span>
+            </a>
+            <button class="btn-logout">
+                <span class="nav-icon">🚪</span>
+                <span class="nav-text">Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <header class="manager-topbar">
+        <div class="topbar-left">
+            <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <h1 class="page-title"><%= typeof pageTitle !== 'undefined' ? pageTitle : 'Dashboard' %></h1>
+        </div>
+
+        <div class="topbar-right">
+            <div class="date-time-display">
+                <span id="currentDate"></span>
+                <span id="currentTime"></span>
+            </div>
+
+            <div class="notification-icon">
+                <span class="icon">🔔</span>
+                <% if (typeof pendingCount !== 'undefined' && pendingCount > 0) { %>
+                    <span class="notification-dot"></span>
+                <% } %>
+            </div>
+
+            <div class="user-profile">
+                <img src="/images/default-avatar.png" alt="Manager" class="profile-avatar" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                <div class="profile-avatar-placeholder" style="display:none;">
+                    👤
+                </div>
+                <div class="profile-info">
+                    <span class="profile-name"><%= typeof managerName !== 'undefined' ? managerName : 'Manager' %></span>
+                    <span class="profile-role">Restaurant Manager</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="manager-content">

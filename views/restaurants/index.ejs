@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QuickSEAT - Restaurant Booking</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+    <style>
+      /* Smooth scroll & navbar offset */
+      html {
+        scroll-behavior: smooth;
+      }
+      #all-restaurants-list {
+        scroll-margin-top: 80px;
+      }
+
+      /* Restaurant Card */
+      .restaurant-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+      }
+
+      .restaurant-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+      }
+
+      .restaurant-image {
+        position: relative;
+        width: 100%;
+        height: 200px;
+        overflow: hidden;
+      }
+
+      .restaurant-img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: opacity 0.4s ease;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+
+      .image-placeholder {
+        width: 100%;
+        height: 100%;
+        background: #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+      }
+
+      .restaurant-info {
+        padding: 16px;
+      }
+
+      .restaurant-name {
+        margin: 0 0 8px;
+        font-size: 1.4rem;
+        font-weight: 600;
+        color: #1a1a1a;
+      }
+
+      .restaurant-address {
+        margin: 0 0 10px;
+        color: #555;
+        font-size: 0.95rem;
+      }
+
+      .restaurant-details {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 12px;
+        font-size: 0.9rem;
+        color: #666;
+      }
+
+      .detail-item {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .card-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .btn-view,
+      .btn-edit {
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+      }
+
+      .btn-view {
+        background: #007bff;
+        color: white;
+      }
+
+      .btn-view:hover {
+        background: #0056b3;
+      }
+
+      .btn-edit {
+        background: #28a745;
+        color: white;
+      }
+
+      .btn-edit:hover {
+        background: #1e7e34;
+      }
+
+      .btn-share {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1.2rem;
+        color: #6c757d;
+      }
+
+      .wishlist-icon {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 1.5rem;
+        color: white;
+        cursor: pointer;
+        z-index: 10;
+        text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+      }
+
+      .wishlist-icon .fas {
+        /* Solid heart for active state */
+        color: #ff6b6b;
+      }
+
+      .location-icon-link {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        font-size: 1.5rem;
+        color: white;
+        cursor: pointer;
+        z-index: 10;
+        text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        transition: transform 0.2s;
+        text-decoration: none;
+      }
+
+      .location-icon-link:hover {
+        transform: scale(1.1);
+        color: #ff6b6b;
+      }
+
+      .no-restaurants {
+        text-align: center;
+        padding: 40px;
+        color: #666;
+      }
+
+      .no-restaurants a {
+        margin-top: 16px;
+        display: inline-block;
+      }
+
+      /* ====================================
+         SHARE MODAL STYLING
+         ==================================== */
+      .modal {
+        display: none; /* Hidden by default */
+        position: fixed; /* Stay in place */
+        z-index: 2000; /* Sit on top of everything (sidebar is usually z-index 100-1000) */
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto; /* Enable scroll if needed */
+        background-color: rgba(0, 0, 0, 0.5); /* Black w/ opacity */
+        animation: fadeIn 0.3s;
+      }
+
+      .modal-content {
+        background-color: #fefefe;
+        margin: 10% auto; /* 10% from the top and centered */
+        padding: 25px;
+        border: 1px solid #888;
+        width: 90%;
+        max-width: 450px; /* Don't let it get too wide */
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        position: relative;
+      }
+
+      .close-modal-share {
+        color: #aaa;
+        float: right;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+        line-height: 20px;
+      }
+
+      .close-modal-share:hover,
+      .close-modal-share:focus {
+        color: #000;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      /* Share Links Styling */
+      .share-options {
+        display: flex;
+        justify-content: space-around;
+        margin: 20px 0;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .share-link {
+        text-decoration: none;
+        padding: 10px 20px;
+        color: white;
+        border-radius: 5px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.2s;
+      }
+
+      .share-link:hover {
+        transform: translateY(-2px);
+      }
+
+      .share-link.facebook {
+        background-color: #3b5998;
+      }
+
+      .share-link.twitter {
+        background-color: #1da1f2;
+      }
+
+      .share-link.whatsapp {
+        background-color: #25d366;
+      }
+
+      /* Copy Link Section */
+      .copy-link-container {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+      }
+
+      #share-link-input {
+        flex-grow: 1;
+        padding: 8px 12px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background-color: #f9f9f9;
+        color: #555;
+      }
+
+      #copy-link-btn {
+        padding: 8px 15px;
+        background-color: #34495e;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      #copy-link-btn:hover {
+        background-color: #2c3e50;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <%- include('../includes/navbar') %>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <video id="heroVideo" autoplay muted loop playsinline></video>
+      <div class="container">
+        <div class="hero-content">
+          <h1 class="hero-title">Find Your Perfect Table</h1>
+          <p class="hero-subtitle">
+            Book restaurants instantly across the city
+          </p>
+
+          <div class="booking-form">
+            <form action="/restaurants/search" method="GET" id="searchForm">
+              <div class="form-group">
+                <label for="restaurant-search">Restaurant or Location</label>
+                <input
+                  type="text"
+                  id="restaurant-search"
+                  name="query"
+                  placeholder="Search restaurants or locations..."
+                  autocomplete="off"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="date-input">Date</label>
+                <input type="date" id="date-input" name="date" required />
+              </div>
+
+              <div class="form-group">
+                <label for="time-select">Time</label>
+                <select id="time-select" name="time" required>
+                  <option value="">Select time</option>
+                  <option value="11:00">11:00 AM</option>
+                  <option value="11:30">11:30 AM</option>
+                  <option value="12:00">12:00 PM</option>
+                  <option value="12:30">12:30 PM</option>
+                  <option value="13:00">1:00 PM</option>
+                  <option value="13:30">1:30 PM</option>
+                  <option value="14:00">2:00 PM</option>
+                  <option value="17:00">5:00 PM</option>
+                  <option value="17:30">5:30 PM</option>
+                  <option value="18:00">6:00 PM</option>
+                  <option value="18:30">6:30 PM</option>
+                  <option value="19:00">7:00 PM</option>
+                  <option value="19:30">7:30 PM</option>
+                  <option value="20:00">8:00 PM</option>
+                  <option value="20:30">8:30 PM</option>
+                  <option value="21:00">9:00 PM</option>
+                  <option value="21:30">9:30 PM</option>
+                  <option value="22:00">10:00 PM</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="guests-select">Guests</label>
+                <select id="guests-select" name="guests" required>
+                  <option value="">Select guests</option>
+                  <option value="1">1 Guest</option>
+                  <option value="2" selected>2 Guests</option>
+                  <option value="3">3 Guests</option>
+                  <option value="4">4 Guests</option>
+                  <option value="5">5 Guests</option>
+                  <option value="6">6 Guests</option>
+                  <option value="7">7 Guests</option>
+                  <option value="8">8 Guests</option>
+                  <option value="9">9 Guests</option>
+                  <option value="10">10 Guests</option>
+                  <option value="10+">10+ Guests</option>
+                </select>
+              </div>
+
+              <button type="submit" class="search-btn">
+                Find Available Tables
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- All Restaurants -->
+    <section class="restaurants-section">
+      <div class="container">
+        <h2 class="section-title" id="all-restaurants-list">All Restaurants</h2>
+
+        <% if (restaurants.length === 0) { %>
+        <div class="no-restaurants">
+          <p>No restaurants available at the moment.</p>
+          <a href="/restaurants/new" class="btn-primary"
+            >Add First Restaurant</a
+          >
+        </div>
+        <% } else { %>
+        <div class="restaurants-grid">
+          <% restaurants.forEach(restaurant => { %>
+          <div
+            class="restaurant-card"
+            data-main="<%= restaurant.mainImage || '/images/default-restaurant.jpg' %>"
+            data-gallery="<%= JSON.stringify(restaurant.galleryImages || []) %>"
+            data-id="<%= restaurant._id %>"
+          >
+            <div class="restaurant-image">
+              <div class="wishlist-icon">
+                <i class="far fa-heart"></i>
+              </div>
+              <a 
+                href="<%= restaurant.googleMapsUrl || 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(restaurant.address) %>" 
+                target="_blank" 
+                class="location-icon-link"
+                title="View Location"
+                onclick="event.stopPropagation();" 
+              >
+                <i class="fas fa-map-marker-alt"></i>
+              </a>
+              <img
+                src="<%= restaurant.mainImage || '/images/default-restaurant.jpg' %>"
+                alt="<%= restaurant.name %>"
+                class="restaurant-img"
+              />
+            </div>
+
+            <div class="restaurant-info">
+              <h3 class="restaurant-name"><%= restaurant.name %></h3>
+              <p class="restaurant-address">
+                Location: <%= restaurant.address %>
+              </p>
+              <div class="restaurant-details">
+                <span class="detail-item"
+                  >Chairs: <%= restaurant.totalTables %> tables</span
+                >
+                <span class="detail-item"
+                  >People: Max <%= restaurant.maxPartySize %> guests</span
+                >
+              </div>
+
+              <div class="card-actions">
+                <a href="/restaurants/<%= restaurant._id %>" class="btn-view"
+                  >View Details</a
+                >
+                <button class="btn-share">
+                  <i class="fas fa-share-alt"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <% }) %>
+        </div>
+        <% } %>
+      </div>
+    </section>
+
+    <div id="share-modal" class="modal">
+      <div class="modal-content">
+        <span class="close-modal-share">&times;</span>
+        <h3>Share this Restaurant</h3>
+
+        <div class="share-options">
+          <a href="#" class="share-link facebook" target="_blank">
+            <i class="fab fa-facebook-f"></i> Facebook
+          </a>
+          <a href="#" class="share-link twitter" target="_blank">
+            <i class="fab fa-twitter"></i> Twitter
+          </a>
+          <a href="#" class="share-link whatsapp" target="_blank">
+            <i class="fab fa-whatsapp"></i> WhatsApp
+          </a>
+        </div>
+
+        <div class="copy-link-container">
+          <input
+            type="text"
+            id="share-link-input"
+            readonly
+            placeholder="Link will appear here"
+          />
+          <button id="copy-link-btn">Copy Link</button>
+        </div>
+      </div>
+    </div>
+    <%- include('../includes/password-modal') %>
+    <%- include('../includes/footer') %>
+
+    <script>
+      const socket = io();
+
+      socket.on("restaurantUpdated", (data) => {
+        const card = document.querySelector(`[data-id="${data._id}"]`);
+        if (card) {
+          // Update name
+          const nameEl = card.querySelector(".restaurant-name");
+          if (nameEl) nameEl.textContent = data.name;
+
+          // Update image
+          const imgEl = card.querySelector(".restaurant-image");
+          if (imgEl) imgEl.src = data.mainImage || "/images/default.jpg";
+
+          // Update other info if you have
+          const tablesEl = card.querySelector(".restaurant-tables");
+          if (tablesEl) tablesEl.textContent = `Tables: ${data.totalTables}`;
+
+          const partyEl = card.querySelector(".restaurant-party");
+          if (partyEl) partyEl.textContent = `Max Party: ${data.maxPartySize}`;
+
+          const addressEl = card.querySelector(".restaurant-address");
+          if (addressEl) addressEl.textContent = data.address;
+
+          console.log(
+            "Homepage updated in real-time for restaurant:",
+            data._id
+          );
+        }
+      });
+
+      // Hero Video Rotation
+      const videos = ["/videos/bg1.mp4", "/videos/bg2.mp4", "/videos/bg3.mp4"];
+      const videoElement = document.getElementById("heroVideo");
+      let current = 0;
+
+      videos.forEach((src) => {
+        const v = document.createElement("video");
+        v.src = src;
+      });
+      videoElement.src = videos[current];
+
+      setInterval(() => {
+        current = (current + 1) % videos.length;
+        videoElement.src = videos[current];
+        videoElement.play();
+      }, 20000);
+
+      // Set min date
+      const dateInput = document.getElementById("date-input");
+      const today = new Date().toISOString().split("T")[0];
+      dateInput.min = today;
+      dateInput.value = today;
+
+      // Anime.js Card Animation
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            const card = entry.target;
+            if (entry.isIntersecting) {
+              anime({
+                targets: card,
+                opacity: [0, 1],
+                translateY: [80, 0],
+                rotateY: [-20, 0],
+                scale: [0.9, 1],
+                easing: "easeOutElastic(1, .8)",
+                duration: 1200,
+              });
+            } else {
+              card.style.opacity = "0";
+              card.style.transform =
+                "perspective(1000px) rotateY(-15deg) translateY(50px) scale(0.95)";
+            }
+          });
+        },
+        { threshold: 0.2 }
+      );
+
+      window.addEventListener("load", () => {
+        document
+          .querySelectorAll(".restaurant-card")
+          .forEach((card) => observer.observe(card));
+      });
+
+      // RIGHT-TO-LEFT SMOOTH SLIDE (LOOP + SLOW + NO FLICKER)
+      document.querySelectorAll(".restaurant-card").forEach((card) => {
+        const container = card.querySelector(".restaurant-image");
+        const img = card.querySelector(".restaurant-img");
+        const mainImage = card.dataset.main;
+        const gallery = JSON.parse(card.dataset.gallery || "[]");
+        const images = [mainImage, ...gallery].filter(
+          (src) => src && src.trim() !== ""
+        );
+
+        if (images.length <= 1) return;
+
+        let index = 0;
+        let interval = null;
+
+        const createImg = (src) => {
+          const el = document.createElement("img");
+          el.src = src;
+          el.className = "restaurant-img";
+          el.style.position = "absolute";
+          el.style.top = el.style.left = "0";
+          el.style.width = el.style.height = "100%";
+          el.style.objectFit = "cover";
+          return el;
+        };
+
+        const slideNext = () => {
+          index = (index + 1) % images.length;
+          const next = createImg(images[index]);
+          next.style.transform = "translateX(100%)";
+          container.appendChild(next);
+
+          // Slide current out to left
+          anime({
+            targets: img,
+            translateX: "-100%",
+            easing: "easeInOutQuad",
+            duration: 800,
+            complete: () => img.remove(),
+          });
+
+          // Slide new in from right
+          anime({
+            targets: next,
+            translateX: "0%",
+            easing: "easeInOutQuad",
+            duration: 800,
+          });
+        };
+
+        const resetToMain = () => {
+          if (img.src.includes(mainImage)) return;
+
+          const main = createImg(mainImage);
+          main.style.transform = "translateX(-100%)";
+          container.appendChild(main);
+
+          anime({
+            targets: img,
+            translateX: "100%",
+            easing: "easeInOutQuad",
+            duration: 800,
+            complete: () => img.remove(),
+          });
+
+          anime({
+            targets: main,
+            translateX: "0%",
+            easing: "easeInOutQuad",
+            duration: 800,
+          });
+        };
+
+        card.addEventListener("mouseenter", () => {
+          if (!interval) {
+            interval = setInterval(slideNext, 1500); // 1.2s gap = slower feel
+          }
+        });
+
+        card.addEventListener("mouseleave", () => {
+          clearInterval(interval);
+          interval = null;
+          setTimeout(resetToMain, 150);
+        });
+      });
+      // ====================================
+      // 6. WISHLIST LOGIC
+      // ====================================
+      function updateWishlistIcons() {
+        const wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+        document.querySelectorAll(".restaurant-card").forEach((card) => {
+          const restaurantId = card.dataset.id;
+          const icon = card.querySelector(".wishlist-icon i");
+          if (icon) {
+            if (wishlist.includes(restaurantId)) {
+              icon.classList.remove("far");
+              icon.classList.add("fas");
+            } else {
+              icon.classList.remove("fas");
+              icon.classList.add("far");
+            }
+          }
+        });
+      }
+
+      document.querySelectorAll(".wishlist-icon").forEach((button) => {
+        button.addEventListener("click", (e) => {
+          e.stopPropagation(); // prevent card click
+          e.preventDefault();
+
+          const card = e.target.closest(".restaurant-card");
+          const restaurantId = card.dataset.id;
+          let wishlist = JSON.parse(localStorage.getItem("wishlist")) || [];
+
+          if (wishlist.includes(restaurantId)) {
+            wishlist = wishlist.filter((id) => id !== restaurantId);
+          } else {
+            wishlist.push(restaurantId);
+          }
+
+          localStorage.setItem("wishlist", JSON.stringify(wishlist));
+          updateWishlistIcons();
+        });
+      });
+
+      updateWishlistIcons();
+
+      // ====================================
+      // 7. SHARE FUNCTIONALITY (FIXED)
+      // ====================================
+      const shareModal = document.getElementById("share-modal");
+      const closeShareBtn = document.querySelector(".close-modal-share");
+
+      // SELECT ALL SHARE BUTTONS
+      const shareBtns = document.querySelectorAll(".btn-share");
+
+      shareBtns.forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          // Stop bubbling so we don't click the card link
+          e.stopPropagation();
+          e.preventDefault();
+
+          console.log("Share button clicked");
+
+          // Get the ID from the specific card
+          const card = btn.closest(".restaurant-card");
+          const restaurantId = card.dataset.id;
+
+          // Construct the URL
+          const restaurantURL = `${window.location.origin}/restaurants/${restaurantId}`;
+
+          if (shareModal) {
+            const encodedURL = encodeURIComponent(restaurantURL);
+
+            // Update Social Links
+            const fbLink = shareModal.querySelector(".share-link.facebook");
+            if (fbLink)
+              fbLink.href = `https://www.facebook.com/sharer/sharer.php?u=${encodedURL}`;
+
+            const twLink = shareModal.querySelector(".share-link.twitter");
+            if (twLink)
+              twLink.href = `https://twitter.com/intent/tweet?url=${encodedURL}&text=Check out this restaurant!`;
+
+            const waLink = shareModal.querySelector(".share-link.whatsapp");
+            if (waLink)
+              waLink.href = `https://api.whatsapp.com/send?text=Check out this restaurant: ${encodedURL}`;
+
+            // Update Input Field
+            const inputField = shareModal.querySelector("#share-link-input");
+            if (inputField) inputField.value = restaurantURL;
+
+            // Show Modal
+            shareModal.style.display = "block";
+          } else {
+            console.error("Error: Share modal HTML not found.");
+          }
+        });
+      });
+
+      // Close Modal (X button)
+      if (closeShareBtn) {
+        closeShareBtn.addEventListener("click", () => {
+          if (shareModal) shareModal.style.display = "none";
+        });
+      }
+
+      // Close Modal (Click outside)
+      window.addEventListener("click", (e) => {
+        if (e.target === shareModal) {
+          shareModal.style.display = "none";
+        }
+      });
+
+      // Copy Link Logic
+      const copyLinkBtn = document.getElementById("copy-link-btn");
+      if (copyLinkBtn) {
+        copyLinkBtn.addEventListener("click", async () => {
+          const linkInput = document.getElementById("share-link-input");
+
+          linkInput.select();
+          linkInput.setSelectionRange(0, 99999); // Mobile fix
+
+          try {
+            await navigator.clipboard.writeText(linkInput.value);
+            const originalText = copyLinkBtn.textContent;
+            copyLinkBtn.textContent = "Copied!";
+            copyLinkBtn.style.backgroundColor = "#2ecc71";
+
+            setTimeout(() => {
+              copyLinkBtn.textContent = originalText;
+              copyLinkBtn.style.backgroundColor = "#34495e";
+            }, 2000);
+          } catch (err) {
+            document.execCommand("copy"); // Fallback
+            copyLinkBtn.textContent = "Copied!";
+          }
+        });
+      }
+    </script>
+  </body>
+</html>

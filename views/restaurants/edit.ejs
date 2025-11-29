@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Restaurant - QuickSEAT</title>
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/auth.css">
+    <link rel="stylesheet" href="/css/edit.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
+    <style>
+      /* ========================================================= */
+      /* EXACT STYLES FROM DASHBOARD.EJS (Layout & Sidebar)       */
+      /* ========================================================= */
+      
+      /* BASE LAYOUT */
+      body, html {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        font-family: "Inter", sans-serif;
+        background-color: #f4f7f9;
+      }
+      
+      .dashboard-layout {
+        display: flex;
+        height: 100%;
+      }
+
+      /* SIDEBAR STYLING */
+      .sidebar {
+        width: 250px;
+        background-color: #34495e;
+        color: white;
+        display: flex;
+        flex-direction: column;
+        padding: 20px 0;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        flex-shrink: 0; /* Prevent sidebar from shrinking */
+      }
+
+      .sidebar .logo {
+        font-size: 1.8rem;
+        font-weight: bold;
+        padding: 0 20px 20px;
+        border-bottom: 1px solid #4a637d;
+        margin-bottom: 20px;
+      }
+
+      .sidebar nav ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .sidebar nav ul li a {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 20px;
+        color: white;
+        text-decoration: none;
+        font-size: 1rem;
+        transition: background-color 0.2s;
+      }
+
+      .sidebar nav ul li a:hover,
+      .sidebar nav ul li.active a {
+        background-color: #4a637d;
+      }
+
+      .sidebar .logout-area {
+        margin-top: auto;
+        padding: 20px;
+      }
+
+      .sidebar .btn-customer-site,
+      .sidebar .btn-logout {
+        width: 100%;
+        padding: 10px;
+        border-radius: 8px;
+        margin-top: 10px;
+        cursor: pointer;
+        font-weight: 600;
+        text-align: center;
+        text-decoration: none;
+        color: white;
+        transition: background-color 0.2s;
+        border: none;
+        display: block; /* Ensure links behave like blocks */
+        box-sizing: border-box;
+      }
+      
+      .sidebar .btn-customer-site {
+          background-color: #3498db; /* Optional: give it a color */
+      }
+      
+      .sidebar .btn-logout {
+          background-color: #e74c3c;
+      }
+
+      /* MAIN CONTENT AREA */
+      .main-content {
+        flex-grow: 1;
+        padding: 0;
+        overflow-y: auto;
+      }
+
+      /* ========================================================= */
+      /* EDIT PAGE SPECIFIC STYLES                                */
+      /* ========================================================= */
+
+      .form-title {
+          font-size: 1.8rem;
+          color: #34495e;
+          margin-bottom: 5px;
+      }
+
+      .form-subtitle {
+          color: #7f8c8d;
+          margin-bottom: 30px;
+      }
+
+      .form-group {
+          margin-bottom: 20px;
+      }
+
+      .form-group label {
+          display: block;
+          margin-bottom: 8px;
+          font-weight: 600;
+          color: #2c3e50;
+      }
+
+      .form-group input[type="text"],
+      .form-group input[type="number"] {
+          width: 100%;
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          font-size: 1rem;
+      }
+
+      .form-help {
+          display: block;
+          margin-top: 5px;
+          color: #95a5a6;
+          font-size: 0.85rem;
+      }
+
+      /* Image Upload Styles */
+      .upload-area {
+          border: 2px dashed #bdc3c7;
+          border-radius: 8px;
+          padding: 40px;
+          text-align: center;
+          cursor: pointer;
+          transition: border-color 0.3s;
+          background: #fdfdfd;
+      }
+
+      .upload-area:hover, .upload-area.dragover {
+          border-color: #3498db;
+          background: #f0f8ff;
+      }
+
+      .upload-icon {
+          font-size: 3rem;
+          margin-bottom: 10px;
+      }
+
+      .file-input {
+          display: none;
+      }
+
+      .current-images {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+          gap: 15px;
+          margin-bottom: 20px;
+      }
+
+      .image-item {
+          position: relative;
+          height: 150px;
+          border-radius: 8px;
+          overflow: hidden;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      }
+
+      .image-item img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+      }
+
+      .image-actions {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.5);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          opacity: 0;
+          transition: opacity 0.2s;
+      }
+
+      .image-item:hover .image-actions {
+          opacity: 1;
+      }
+
+      .main-badge {
+          position: absolute;
+          top: 8px;
+          left: 8px;
+          background: #2ecc71;
+          color: white;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 0.75rem;
+          font-weight: bold;
+          z-index: 2;
+      }
+
+      .btn-remove, .btn-set-main {
+          background: white;
+          border: none;
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: bold;
+          transition: transform 0.2s;
+      }
+
+      .btn-remove { color: #e74c3c; }
+      .btn-set-main { color: #3498db; }
+      .btn-remove:hover, .btn-set-main:hover { transform: scale(1.1); }
+
+      /* Action Buttons */
+      .form-actions {
+          display: flex;
+          gap: 15px;
+      }
+
+      .btn-primary, .btn-secondary, .btn-danger {
+          padding: 12px 24px;
+          border-radius: 6px;
+          font-weight: 600;
+          text-decoration: none;
+          cursor: pointer;
+          border: none;
+          font-size: 1rem;
+      }
+
+      .btn-primary { background-color: #2ecc71; color: white; }
+      .btn-primary:hover { background-color: #27ae60; }
+
+      .btn-secondary { background-color: #95a5a6; color: white; }
+      .btn-secondary:hover { background-color: #7f8c8d; }
+
+      .btn-danger { background-color: #e74c3c; color: white; width: 100%; }
+      .btn-danger:hover { background-color: #c0392b; }
+
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <div class="logo">QuickSEAT</div>
+    
+            <nav>
+              <ul>
+                <li>
+                  <a href="/restaurant-dashboard">Dashboard</a>
+                </li>
+                <li><a href="/restaurant-dashboard/menu">Menu</a></li>
+                <li><a href="/restaurant-dashboard/floorplan">Floor Plan</a></li>
+                <li><a href="/restaurant-dashboard/calendar">Calendar</a></li>
+                <li class="active"><a href="/restaurant-dashboard/edit">Edit</a></li>
+              </ul>
+            </nav>
+    
+            <div class="logout-area">
+              <a href="/" class="btn-customer-site">Back to Customer Site</a>
+              <a
+                href="/logout"
+                class="btn-logout"
+                onclick="event.preventDefault(); document.getElementById('logout-restaurant-form').submit();"
+                >Logout</a
+              >
+              <form
+                id="logout-restaurant-form"
+                action="/logout"
+                method="GET"
+                style="display: none"
+              ></form>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <section class="form-section">
+                <div class="form-wrapper">
+                    <h2 class="form-title">Edit Restaurant</h2>
+                    <p class="form-subtitle">Update restaurant information and images</p>
+
+                    <form action="/restaurants/<%= restaurant._id %>?_method=PUT" method="POST" class="restaurant-form" enctype="multipart/form-data" id="editForm">
+                        <input type="hidden" name="removedImages" id="removedImages" value="">
+                        <div id="removedImagesContainer"></div> 
+                        <input type="hidden" name="mainImage" id="mainImageField" value="<%= restaurant.mainImage || '' %>">
+
+                        <div class="form-group">
+                            <label for="name">Restaurant Name <span class="required">*</span></label>
+                            <input type="text" id="name" name="name" value="<%= restaurant.name %>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="address">Address <span class="required">*</span></label>
+                            <input type="text" id="address" name="address" value="<%= restaurant.address %>" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="totalTables">Total Tables <span class="required">*</span></label>
+                            <input type="number" id="totalTables" name="totalTables" value="<%= restaurant.totalTables %>" min="1" max="100" required>
+                            <small class="form-help">Number of tables available in the restaurant</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="maxPartySize">Maximum Party Size <span class="required">*</span></label>
+                            <input type="number" id="maxPartySize" name="maxPartySize" value="<%= restaurant.maxPartySize %>" min="1" max="50" required>
+                            <small class="form-help">Maximum number of guests per table</small>
+                        </div>
+
+                        <div class="image-upload-section">
+                            <h3 class="image-upload-title" style="margin-top: 25px; margin-bottom: 15px; color:#2c3e50;">Restaurant Images</h3>
+
+                            <div class="current-images" id="currentImages">
+                                <% if (restaurant.mainImage) { %>
+                                    <div class="image-item" data-src="<%= restaurant.mainImage %>" data-type="main">
+                                        <img src="<%= restaurant.mainImage %>" alt="Main">
+                                        <div class="main-badge">MAIN</div>
+                                        <div class="image-actions">
+                                            <button type="button" class="btn-remove" onclick="removeImage('<%= restaurant.mainImage %>', this)">x</button>
+                                        </div>
+                                    </div>
+                                <% } %>
+
+                                <% (restaurant.galleryImages || []).forEach(img => { %>
+                                    <div class="image-item" data-src="<%= img %>" data-type="gallery">
+                                        <img src="<%= img %>" alt="Gallery">
+                                        <div class="image-actions">
+                                            <button type="button" class="btn-set-main" title="Set as Main" onclick="setAsMain('<%= img %>', this)">M</button>
+                                            <button type="button" class="btn-remove" onclick="removeImage('<%= img %>', this)">x</button>
+                                        </div>
+                                    </div>
+                                <% }); %>
+                            </div>
+
+                            <div class="upload-area" id="uploadArea">
+                                <div class="upload-icon">📷</div>
+                                <div class="upload-text">Drop images here or click to upload</div>
+                                <div class="upload-hint">Supports JPG, PNG, WebP. Max 5MB each.</div>
+                                <input type="file" id="fileInput" class="file-input" name="newImages" accept="image/*" multiple>
+                            </div>
+
+                            <div class="current-images" id="newPreview" style="margin-top: 20px;"></div>
+                        </div>
+
+                        <div class="form-actions" style="margin-top: 32px;">
+                            <button type="submit" class="btn-primary">Update Restaurant</button>
+                            <a href="/restaurant-dashboard" class="btn-secondary" style="text-align: center;">Cancel</a>
+                        </div>
+                    </form>
+
+                    <form action="/restaurants/<%= restaurant._id %>?_method=DELETE" method="POST" class="delete-form" style="margin-top: 32px; border-top: 1px solid #eee; padding-top: 20px;">
+                        <h3 style="color: #e74c3c; margin-bottom: 10px; font-size: 1.2rem;">Danger Zone</h3>
+                        <p style="color: #7f8c8d; margin-bottom: 15px; font-size: 0.9rem;">Deleting your restaurant is irreversible.</p>
+                        <button type="submit" class="btn-danger" onclick="return confirm('Are you sure you want to delete this restaurant? This action cannot be undone.')">
+                            Delete Restaurant
+                        </button>
+                    </form>
+                </div>
+            </section>
+        </main>
+    </div>x`
+
+    <script>
+        // Drag & Drop + File Input Logic
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const currentImages = document.getElementById('currentImages');
+        const newPreview = document.getElementById('newPreview');
+        const removedImagesContainer = document.getElementById('removedImagesContainer');
+        const mainImageField = document.getElementById('mainImageField');
+        
+        // Trigger file input
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        // Drag events
+        ['dragenter', 'dragover'].forEach(event => {
+            uploadArea.addEventListener(event, e => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(event => {
+            uploadArea.addEventListener(event, e => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+        });
+
+        uploadArea.addEventListener('drop', e => {
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        fileInput.addEventListener('change', () => {
+            handleFiles(fileInput.files);
+            // Don't clear fileInput value immediately if we want simple form submission, 
+            // but since we are managing a 'newFiles' array manually, we might need to.
+            // For standard multipart form, we usually rely on the input holding the files.
+            // However, the logic below uses a custom array 'newFiles'.
+        });
+
+        let newFiles = []; 
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024) {
+                    const reader = new FileReader();
+                    reader.onload = e => {
+                        const div = document.createElement('div');
+                        div.className = 'image-item';
+                        div.innerHTML = `
+                            <img src="${e.target.result}" alt="New">
+                            <div class="image-actions">
+                                <button type="button" class="btn-remove" onclick="removeNewImage(this)">x</button>
+                            </div>
+                        `;
+                        newPreview.appendChild(div);
+                        // Store file object for submission
+                        file.previewElement = div; 
+                        newFiles.push(file);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+
+        window.removeNewImage = function(btn) {
+            const item = btn.closest('.image-item');
+            const index = newFiles.findIndex(f => f.previewElement === item);
+            if (index > -1) newFiles.splice(index, 1);
+            item.remove();
+        };
+
+        window.setAsMain = function(src, btn) {
+            mainImageField.value = src;
+
+            document.querySelectorAll('.main-badge').forEach(b => b.remove());
+            document.querySelectorAll('.image-item').forEach(item => {
+                const setMainBtn = item.querySelector('.btn-set-main');
+                if (setMainBtn) setMainBtn.style.display = 'flex';
+            });
+
+            const item = btn.closest('.image-item');
+            item.insertAdjacentHTML('afterbegin', '<div class="main-badge">MAIN</div>');
+            btn.style.display = 'none';
+        };
+
+        window.removeImage = function(src, btn) {
+            if (confirm('Remove this image?')) {
+                const item = btn.closest('.image-item');
+                item.remove();
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'removedImages[]';
+                input.value = src;
+                removedImagesContainer.appendChild(input);
+
+                if (mainImageField.value === src) {
+                    mainImageField.value = '';
+                }
+            }
+        };
+
+        // On form submit - replace file input files with our curated list
+        document.getElementById('editForm').addEventListener('submit', function(e) {
+            if (newFiles.length > 0) {
+                const dt = new DataTransfer();
+                newFiles.forEach(file => dt.items.add(file));
+                fileInput.files = dt.files;
+            }
+        });
+    </script>
+</body>
+</html>

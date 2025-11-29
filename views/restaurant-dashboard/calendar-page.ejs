@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Calendar - <%= pageTitle %></title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/calendar-page.css" />
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  </head>
+  <body>
+    <div class="dashboard-layout">
+      <aside class="sidebar">
+        <div class="logo">QuickSEAT</div>
+        <nav>
+          <ul>
+            <li><a href="/restaurant-dashboard">Dashboard</a></li>
+            <li><a href="/restaurant-dashboard/menu">Menu</a></li>
+            <li><a href="/restaurant-dashboard/floorplan">Floor Plan</a></li>
+            <li class="active">
+              <a href="/restaurant-dashboard/calendar">Calendar</a>
+            </li>
+            <li><a href="/restaurant-dashboard/edit">Edit</a></li>
+          </ul>
+        </nav>
+        <div class="logout-area">
+          <a href="/" class="btn-customer-site">Back to Customer Site</a>
+          <a
+            href="/logout"
+            class="btn-logout"
+            onclick="event.preventDefault(); document.getElementById('logout-restaurant-form').submit();"
+            >Logout</a
+          >
+          <form
+            id="logout-restaurant-form"
+            action="/logout"
+            method="GET"
+            style="display: none"
+          ></form>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="calendar-header">
+          <h1>Calendar</h1>
+          <div class="user-profile">
+            <span
+              >Wed, <%= new Date().toLocaleDateString('en-US', { day: 'numeric',
+              month: 'short' }) %></span
+            >
+            <a href="/restaurants-details">
+              <img
+                src="https://placehold.co/30x30/667eea/white?text=<%= (restaurant && restaurant.name) ? restaurant.name.charAt(0).toUpperCase() : 'M' %>"
+                style="border-radius: 50%"
+                alt="User Avatar"
+              />
+            </a>
+            <div>
+              <strong
+                ><%= (restaurant && restaurant.name) ? restaurant.name :
+                "Manager" %></strong
+              >
+              <div style="font-size: 0.8rem; color: #7f8c8d">Restaurant</div>
+            </div>
+          </div>
+        </header>
+
+        <div class="controls-bar">
+          <div class="view-selector">
+            <button class="view-btn active" data-view="month">📅 Month</button>
+            <button class="view-btn" data-view="week">📆 Week</button>
+            <button class="view-btn" data-view="day">📋 Day</button>
+          </div>
+          <div class="filter-section">
+            <span style="font-weight: 600; color: #34495e">Filter:</span>
+            <button class="filter-btn active" data-status="all">All</button>
+            <button class="filter-btn" data-status="pending">Pending</button>
+            <button class="filter-btn" data-status="approved">Approved</button>
+            <button class="filter-btn" data-status="declined">Declined</button>
+          </div>
+          <div class="action-buttons">
+            <button class="btn-action-export" id="exportPdfBtn">
+              📥 Export PDF
+            </button>
+            <button class="btn-action-stats" id="statsBtn">
+              📊 Statistics
+            </button>
+            <button class="btn-action-stats" id="remindersBtn">
+              📧 Send Reminders
+            </button>
+          </div>
+        </div>
+
+        <div class="calendar-wrapper">
+          <div class="calendar-container">
+            <div class="calendar-nav-header">
+              <h2 class="calendar-month-title" id="monthTitle">
+                November 2025
+              </h2>
+              <div class="calendar-nav-buttons">
+                <select id="monthYearSelector" class="nav-dropdown active">
+                  <option value="">Select Month/Year...</option>
+                </select>
+                <select id="weekYearSelector" class="nav-dropdown">
+                  <option value="">Select Week...</option>
+                </select>
+                <select id="daySelector" class="nav-dropdown">
+                  <option value="">Select Day...</option>
+                </select>
+              </div>
+            </div>
+            <div class="calendar-weekdays" id="weekdaysContainer">
+              <div class="weekday">Sun</div>
+              <div class="weekday">Mon</div>
+              <div class="weekday">Tue</div>
+              <div class="weekday">Wed</div>
+              <div class="weekday">Thu</div>
+              <div class="weekday">Fri</div>
+              <div class="weekday">Sat</div>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+          </div>
+
+          <div class="bookings-detail-section">
+            <div class="bookings-detail-header">
+              <h2 id="bookingDateTitle">Select a date to view bookings</h2>
+            </div>
+            <div class="bookings-detail-content" id="bookingsContainer">
+              <p class="no-bookings">👈 Click on a date to see bookings</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats-panel" id="statsPanel">
+          <h3>
+            <span
+              >📊 Statistics
+              <span class="stats-date-info" id="statsDateInfo"
+                >- Overall</span
+              ></span
+            ><button class="stats-close-btn" id="statsCloseBtn">&times;</button>
+          </h3>
+          <div class="stats-grid">
+            <div class="stat-item">
+              <div class="stat-number" id="totalBookings">0</div>
+              <div class="stat-label">Total Bookings</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="pendingCount">0</div>
+              <div class="stat-label">Pending</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="confirmedCount">0</div>
+              <div class="stat-label">Approved</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="rejectedCount">0</div>
+              <div class="stat-label">Declined</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="avgPartySize">0</div>
+              <div class="stat-label">Avg Party Size</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-number" id="totalGuests">0</div>
+              <div class="stat-label">Total Guests</div>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <div id="remindersModal" class="modal">
+      <div class="modal-content">
+        <span class="modal-close">&times;</span>
+        <h2>📧 Send Email Reminders</h2>
+        <p>Send confirmation reminders to customers with pending bookings?</p>
+        <button class="modal-btn" id="sendRemindersBtn">Send Reminders</button>
+        <button
+          class="modal-btn"
+          style="background-color: #95a5a6; margin-top: 10px"
+          id="cancelRemindersBtn"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+
+    <script>
+      const socket = io();
+      const restaurantId = "<%= restaurant._id %>";
+
+      let currentDate = new Date();
+      let weekStartDate = null;
+      let selectedDate = null;
+      let allBookings = [];
+      let currentView = "month";
+      let currentFilter = "all";
+
+      function populateMonthYearDropdown() {
+        const selector = document.getElementById("monthYearSelector");
+        const currentYear = new Date().getFullYear();
+        selector.innerHTML = '<option value="">Select Month/Year...</option>';
+        for (let y = currentYear - 2; y <= currentYear + 2; y++) {
+          for (let m = 0; m < 12; m++) {
+            const monthName = new Date(y, m, 1).toLocaleString("default", {
+              month: "long",
+            });
+            const value = ${y}-${String(m + 1).padStart(2, "0")};
+            const option = document.createElement("option");
+            option.value = value;
+            option.textContent = ${monthName} ${y};
+            selector.appendChild(option);
+          }
+        }
+      }
+
+      function populateWeekDropdown() {
+        const selector = document.getElementById("weekYearSelector");
+        const today = new Date();
+        selector.innerHTML = '<option value="">Select Week...</option>';
+        for (let i = -52; i <= 365; i++) {
+          const date = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate() + i
+          );
+          const weekStart = new Date(date);
+          weekStart.setDate(date.getDate() - date.getDay());
+          const weekEnd = new Date(weekStart);
+          weekEnd.setDate(weekStart.getDate() + 6);
+          const weekKey = weekStart.toISOString().split("T")[0];
+          if (selector.querySelector(option[value="${weekKey}"])) continue;
+          const startStr = weekStart.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          });
+          const endStr = weekEnd.toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          });
+          const option = document.createElement("option");
+          option.value = weekKey;
+          option.textContent = ${startStr} - ${endStr};
+          selector.appendChild(option);
+        }
+      }
+
+      function populateDayDropdown() {
+        const selector = document.getElementById("daySelector");
+        const today = new Date();
+        selector.innerHTML = '<option value="">Select Day...</option>';
+        for (let i = -30; i <= 365; i++) {
+          const date = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate() + i
+          );
+          const value = date.toISOString().split("T")[0];
+          const dateStr = date.toLocaleDateString("en-US", {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+          });
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = dateStr;
+          selector.appendChild(option);
+        }
+      }
+
+      function getWeekStartDate(date) {
+        const d = new Date(date);
+        const day = d.getDay();
+        const diff = d.getDate() - day;
+        return new Date(d.setDate(diff));
+      }
+
+      function renderCalendar() {
+        if (currentView === "month") renderMonthCalendar();
+        else if (currentView === "week") renderWeekCalendar();
+        else if (currentView === "day") renderDayCalendar();
+        attachCalendarListeners();
+      }
+
+      function renderMonthCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+        const monthName = currentDate.toLocaleString("default", {
+          month: "long",
+          year: "numeric",
+        });
+        document.getElementById("monthTitle").textContent = monthName;
+        const dropdownValue = ${year}-${String(month + 1).padStart(2, "0")};
+        document.getElementById("monthYearSelector").value = dropdownValue;
+        let html = "";
+        for (let i = firstDay - 1; i >= 0; i--) {
+          html += `<div class="calendar-day other-month"><div class="day-number">${
+            daysInPrevMonth - i
+          }</div></div>`;
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+          const date = new Date(year, month, day);
+          const dateStr = formatDateString(date);
+          const isToday = isDateToday(date);
+          const bookingCount = getBookingCountForDate(dateStr);
+          const hasBookings = bookingCount > 0;
+          html += `<div class="calendar-day ${isToday ? "today" : ""} ${
+            hasBookings ? "has-bookings" : ""
+          }" data-date="${dateStr}"><div class="day-number">${day}</div>${
+            hasBookings
+              ? <div class="booking-indicator">${bookingCount}</div>
+              : ""
+          }</div>`;
+        }
+        const totalCells = firstDay + daysInMonth;
+        const remainingCells = 42 - totalCells;
+        for (let day = 1; day <= remainingCells; day++) {
+          html += <div class="calendar-day other-month"><div class="day-number">${day}</div></div>;
+        }
+        document.getElementById("calendarGrid").innerHTML = html;
+      }
+
+      function renderWeekCalendar() {
+        let startOfWeek = weekStartDate || getWeekStartDate(currentDate);
+        weekStartDate = startOfWeek;
+        const weekEnd = new Date(startOfWeek);
+        weekEnd.setDate(startOfWeek.getDate() + 6);
+        const weekStart = startOfWeek.toLocaleString("default", {
+          month: "short",
+          day: "numeric",
+        });
+        const weekEndStr = weekEnd.toLocaleString("default", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+        document.getElementById(
+          "monthTitle"
+        ).textContent = Week: ${weekStart} - ${weekEndStr};
+        const dropdownValue = startOfWeek.toISOString().split("T")[0];
+        document.getElementById("weekYearSelector").value = dropdownValue;
+        let html = "";
+        for (let i = 0; i < 7; i++) {
+          let d = new Date(startOfWeek);
+          d.setDate(startOfWeek.getDate() + i);
+          let dateStr = formatDateString(d);
+          let isToday = isDateToday(d);
+          let bookingCount = getBookingCountForDate(dateStr);
+          let hasBookings = bookingCount > 0;
+          html += `<div class="calendar-day ${isToday ? "today" : ""} ${
+            hasBookings ? "has-bookings" : ""
+          }" data-date="${dateStr}"><div class="day-number">${d.getDate()}</div>${
+            hasBookings
+              ? <div class="booking-indicator">${bookingCount}</div>
+              : ""
+          }<div class="weekday-label">${d.toLocaleDateString("default", {
+            weekday: "short",
+          })}</div></div>`;
+        }
+        document.getElementById("calendarGrid").innerHTML = html;
+      }
+
+      function renderDayCalendar() {
+        let date = selectedDate ? new Date(selectedDate) : currentDate;
+        const dateStr = formatDateString(date);
+        const isToday = isDateToday(date);
+        const bookingCount = getBookingCountForDate(dateStr);
+        const hasBookings = bookingCount > 0;
+        const dayDisplay = date.toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        document.getElementById("monthTitle").textContent = dayDisplay;
+        document.getElementById("daySelector").value = dateStr;
+        document.getElementById("calendarGrid").className =
+          "calendar-grid day-view";
+        let html = `<div class="calendar-day ${isToday ? "today" : ""} ${
+          hasBookings ? "has-bookings" : ""
+        }" data-date="${dateStr}"><div class="day-number">${date.getDate()}</div>${
+          hasBookings
+            ? <div class="booking-indicator">${bookingCount} bookings</div>
+            : ""
+        }<div class="weekday-label">${date.toLocaleDateString("default", {
+          weekday: "long",
+        })}</div></div>`;
+        document.getElementById("calendarGrid").innerHTML = html;
+      }
+
+      function attachCalendarListeners() {
+        const grid = document.getElementById("calendarGrid");
+        grid.addEventListener("click", (e) => {
+          const day = e.target.closest(".calendar-day:not(.other-month)");
+          if (day) {
+            const dateStr = day.dataset.date;
+            selectDate(dateStr);
+            showBookingsForDate(dateStr);
+            updateDayStatistics(dateStr);
+          }
+        });
+
+        document.querySelectorAll(".calendar-nav-btn").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            const action = e.target.dataset.action;
+            if (action === "prev") {
+              if (currentView === "week") {
+                weekStartDate = new Date(
+                  weekStartDate || getWeekStartDate(currentDate)
+                );
+                weekStartDate.setDate(weekStartDate.getDate() - 7);
+                currentDate = new Date(weekStartDate);
+              } else if (currentView === "day") {
+                currentDate.setDate(currentDate.getDate() - 1);
+              } else {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+              }
+            } else if (action === "next") {
+              if (currentView === "week") {
+                weekStartDate = new Date(
+                  weekStartDate || getWeekStartDate(currentDate)
+                );
+                weekStartDate.setDate(weekStartDate.getDate() + 7);
+                currentDate = new Date(weekStartDate);
+              } else if (currentView === "day") {
+                currentDate.setDate(currentDate.getDate() + 1);
+              } else {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+              }
+            }
+            renderCalendar();
+          });
+        });
+
+        document
+          .getElementById("monthYearSelector")
+          .addEventListener("change", (e) => {
+            if (e.target.value && currentView === "month") {
+              const [year, month] = e.target.value.split("-");
+              currentDate = new Date(parseInt(year), parseInt(month) - 1, 1);
+              renderCalendar();
+            }
+          });
+
+        document
+          .getElementById("weekYearSelector")
+          .addEventListener("change", (e) => {
+            if (e.target.value && currentView === "week") {
+              const [year, month, day] = e.target.value.split("-");
+              weekStartDate = new Date(
+                parseInt(year),
+                parseInt(month) - 1,
+                parseInt(day)
+              );
+              currentDate = new Date(weekStartDate);
+              renderCalendar();
+            }
+          });
+
+        document
+          .getElementById("daySelector")
+          .addEventListener("change", (e) => {
+            if (e.target.value && currentView === "day") {
+              const [year, month, day] = e.target.value.split("-");
+              currentDate = new Date(
+                parseInt(year),
+                parseInt(month) - 1,
+                parseInt(day)
+              );
+              selectedDate = e.target.value;
+              renderCalendar();
+              showBookingsForDate(selectedDate);
+            }
+          });
+      }
+
+      function selectDate(dateStr) {
+        document
+          .querySelectorAll(".calendar-day.selected")
+          .forEach((el) => el.classList.remove("selected"));
+        const dayElement = document.querySelector([data-date="${dateStr}"]);
+        if (dayElement) dayElement.classList.add("selected");
+        selectedDate = dateStr;
+      }
+
+      function formatDateString(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        return ${year}-${month}-${day};
+      }
+
+      function isDateToday(date) {
+        const today = new Date();
+        return date.toDateString() === today.toDateString();
+      }
+      // ------------------------ FIXED
+      function getBookingCountForDate(dateStr) {
+        return allBookings.filter((booking) => {
+          const bookingDate = formatDateString(new Date(booking.dateTime));
+          return bookingDate === dateStr;
+        }).length;
+      }
+
+      function showBookingsForDate(dateStr) {
+        let bookingsForDate = allBookings.filter((booking) => {
+          // ------------------------ FIXED
+          const bookingDate = formatDateString(new Date(booking.dateTime));
+          return bookingDate === dateStr;
+        });
+        if (currentFilter !== "all")
+          bookingsForDate = bookingsForDate.filter(
+            (b) => b.status.toLowerCase() === currentFilter
+          );
+        const [year, month, day] = dateStr.split("-");
+        const localDate = new Date(
+          Number(year),
+          Number(month) - 1,
+          Number(day)
+        );
+        const formattedDate = localDate.toLocaleDateString("en-US", {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        document.getElementById(
+          "bookingDateTitle"
+        ).textContent = Bookings for ${formattedDate};
+        let html = '<div class="bookings-list">';
+        if (bookingsForDate.length === 0) {
+          html += <p class="no-bookings">✨ No bookings for this date</p>;
+        } else {
+          bookingsForDate.sort(
+            (a, b) => new Date(a.dateTime) - new Date(b.dateTime)
+          );
+          bookingsForDate.forEach((booking) => {
+            const time = new Date(booking.dateTime).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+            const customerName = booking.customer
+              ? booking.customer.fullName
+              : "Guest";
+            const statusClass = booking.status.toLowerCase();
+            const phoneNumber = booking.customer
+              ? booking.customer.phone
+              : "N/A";
+            const email = booking.customer ? booking.customer.email : "N/A";
+            html += `<div class="booking-card ${statusClass}"><div class="booking-card-header"><div class="booking-time">${time}</div><span class="status-badge ${statusClass}">${
+              booking.status
+            }</span></div><div class="booking-card-body"><div class="booking-detail-item"><span class="booking-label">👤 Customer Name</span><strong>${customerName}</strong></div><div class="booking-detail-item"><span class="booking-label">👥 Party Size</span><strong>${
+              booking.partySize
+            } guests</strong></div><div class="booking-detail-item"><span class="booking-label">📱 Phone</span><strong>${phoneNumber}</strong></div><div class="booking-detail-item"><span class="booking-label">📧 Email</span><strong>${email}</strong></div></div>${
+              booking.notes
+                ? <div class="booking-notes"><strong>📝 Notes:</strong> ${booking.notes}</div>
+                : ""
+            }</div>`;
+          });
+        }
+        html += "</div>";
+        document.getElementById("bookingsContainer").innerHTML = html;
+      }
+
+      // ========== THIS IS THE MISSING FUNCTION ==========
+      function updateDayStatistics(dateStr) {
+        const bookingsForDate = allBookings.filter((booking) => {
+          // ------------------------ FIXED
+          const bookingDate = formatDateString(new Date(booking.dateTime));
+          return bookingDate === dateStr;
+        });
+
+        const total = bookingsForDate.length;
+        const pending = bookingsForDate.filter(
+          (b) => b.status === "pending"
+        ).length;
+        const confirmed = bookingsForDate.filter(
+          (b) => b.status === "approved"
+        ).length;
+        const rejected = bookingsForDate.filter(
+          (b) => b.status === "declined"
+        ).length;
+        const avgParty =
+          total > 0
+            ? Math.round(
+                bookingsForDate.reduce((sum, b) => sum + b.partySize, 0) / total
+              )
+            : 0;
+        const totalGuests = bookingsForDate.reduce(
+          (sum, b) => sum + b.partySize,
+          0
+        );
+
+        const [year, month, day] = dateStr.split("-");
+        const localDate = new Date(
+          Number(year),
+          Number(month) - 1,
+          Number(day)
+        );
+        const formattedDate = localDate.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        });
+
+        document.getElementById(
+          "statsDateInfo"
+        ).textContent = - ${formattedDate};
+        document.getElementById("totalBookings").textContent = total;
+        document.getElementById("pendingCount").textContent = pending;
+        document.getElementById("confirmedCount").textContent = confirmed;
+        document.getElementById("rejectedCount").textContent = rejected;
+        document.getElementById("avgPartySize").textContent = avgParty;
+        document.getElementById("totalGuests").textContent = totalGuests;
+        document.getElementById("statsPanel").classList.add("visible");
+      }
+
+      async function fetchBookings() {
+        try {
+          const res = await fetch(
+            /reservations/by-restaurant/${restaurantId}
+          );
+          if (res.ok) {
+            allBookings = await res.json();
+            renderCalendar();
+          }
+        } catch (error) {
+          console.error("Error fetching bookings:", error);
+        }
+      }
+
+      document.querySelectorAll(".filter-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".filter-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentFilter = btn.dataset.status;
+          if (selectedDate) showBookingsForDate(selectedDate);
+        });
+      });
+
+      document.querySelectorAll(".view-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".view-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentView = btn.dataset.view;
+          document
+            .getElementById("monthYearSelector")
+            .classList.toggle("active", currentView === "month");
+          document
+            .getElementById("weekYearSelector")
+            .classList.toggle("active", currentView === "week");
+          document
+            .getElementById("daySelector")
+            .classList.toggle("active", currentView === "day");
+          renderCalendar();
+          showNotification(
+            `Switched to ${
+              currentView.charAt(0).toUpperCase() + currentView.slice(1)
+            } view`,
+            "info"
+          );
+        });
+      });
+
+      const statsBtn = document.getElementById("statsBtn");
+      const statsPanel = document.getElementById("statsPanel");
+      const statsCloseBtn = document.getElementById("statsCloseBtn");
+
+      statsBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (statsPanel.classList.contains("visible")) {
+          statsPanel.classList.remove("visible");
+        } else {
+          statsPanel.classList.add("visible");
+        }
+      });
+
+      statsCloseBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        statsPanel.classList.remove("visible");
+      });
+
+      document.getElementById("exportPdfBtn").addEventListener("click", () => {
+        const calendarContent = document.querySelector(".calendar-wrapper");
+        const opt = {
+          margin: 10,
+          filename: calendar-${new Date().toISOString().split("T")[0]}.pdf,
+          image: { type: "jpeg", quality: 0.98 },
+          html2canvas: { scale: 2 },
+          jsPDF: { orientation: "landscape" },
+        };
+        html2pdf().set(opt).from(calendarContent).save();
+        showNotification("📥 Calendar exported to PDF", "success");
+      });
+
+      const modal = document.getElementById("remindersModal");
+      const remindersBtn = document.getElementById("remindersBtn");
+      const closeBtn = document.querySelector(".modal-close");
+      const cancelRemindersBtn = document.getElementById("cancelRemindersBtn");
+      const sendRemindersBtn = document.getElementById("sendRemindersBtn");
+
+      remindersBtn.addEventListener("click", () => {
+        modal.style.display = "block";
+      });
+      closeBtn.addEventListener("click", () => {
+        modal.style.display = "none";
+      });
+      cancelRemindersBtn.addEventListener("click", () => {
+        modal.style.display = "none";
+      });
+      window.addEventListener("click", (e) => {
+        if (e.target === modal) modal.style.display = "none";
+      });
+
+      sendRemindersBtn.addEventListener("click", async () => {
+        try {
+          const pendingBookings = allBookings.filter(
+            (b) => b.status === "pending"
+          );
+          if (pendingBookings.length === 0) {
+            showNotification("No pending bookings to remind", "info");
+            modal.style.display = "none";
+            return;
+          }
+          const res = await fetch("/reservations/send-reminders", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              restaurantId: restaurantId,
+              bookingIds: pendingBookings.map((b) => b._id),
+            }),
+          });
+          if (res.ok) {
+            showNotification(
+              📧 Reminders sent to ${pendingBookings.length} customers,
+              "success"
+            );
+          } else {
+            showNotification("Failed to send reminders", "error");
+          }
+          modal.style.display = "none";
+        } catch (error) {
+          console.error("Error sending reminders:", error);
+          showNotification("Error sending reminders", "error");
+        }
+      });
+
+      socket.on("newBooking", (data) => {
+        if (data.restaurantId === restaurantId) {
+          allBookings.push(data.booking);
+          renderCalendar();
+          if (selectedDate) showBookingsForDate(selectedDate);
+          showNotification("🔔 New booking received!", "success");
+        }
+      });
+
+      socket.on("bookingStatusChanged", (data) => {
+        const bookingIndex = allBookings.findIndex(
+          (b) => b._id === data.reservationId
+        );
+        if (bookingIndex !== -1) allBookings[bookingIndex] = data.booking;
+        renderCalendar();
+        if (selectedDate) showBookingsForDate(selectedDate);
+      });
+
+      function showNotification(message, type = "info") {
+        const notification = document.createElement("div");
+        notification.style.cssText = `position: fixed; top: 20px; right: 20px; background: ${
+          type === "success"
+            ? "#2ecc71"
+            : type === "error"
+            ? "#e74c3c"
+            : "#3498db"
+        }; color: white; padding: 15px 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 10000; animation: slideIn 0.3s ease;`;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        setTimeout(() => {
+          notification.style.animation = "slideOut 0.3s ease";
+          setTimeout(() => notification.remove(), 300);
+        }, 3000);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        populateMonthYearDropdown();
+        populateWeekDropdown();
+        populateDayDropdown();
+        fetchBookings();
+      });
+    </script>
+  </body>
+</html>

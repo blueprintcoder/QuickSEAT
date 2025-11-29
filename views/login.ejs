@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - QuickSEAT</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/auth.css">
+    <style>
+        /* Minimal styles for selection layout */
+        .login-options {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+        .login-option-card {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            width: 220px;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #f0f0f0;
+        }
+        .login-option-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        .login-option-card h2 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <%- include('./includes/navbar') %>
+
+    <section class="auth-section">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h1>Welcome Back</h1>
+                    <p>Login to your QuickSEAT account</p>
+                </div>
+
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="alert alert-error"><%= error %></div>
+                <% } %>
+                <% if (typeof success !== 'undefined' && success) { %>
+                    <div class="alert alert-success"><%= success %></div>
+                <% } %>
+
+                <div class="auth-divider">
+                    <span>Select Login Type</span>
+                </div>
+
+                <div class="login-options">
+                    <a href="/login/user" class="login-option-card">
+                        <h2>👤</h2>
+                        <h3>Customer / User Login</h3>
+                        <p>Book tables, view reservations.</p>
+                    </a>
+
+                    <a href="/login/restaurant" class="login-option-card">
+                        <h2>🍴</h2>
+                        <h3>Restaurant Manager Login</h3>
+                        <p>Access floor plan and dashboard.</p>
+                    </a>
+                </div>
+
+                <div class="auth-footer" style="margin-top: 30px;">
+                    <p>Don't have an account? <a href="/signup">Sign up here</a></p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <%- include('./includes/footer') %>
+</body>
+</html>

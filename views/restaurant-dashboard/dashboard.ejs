@@ -1,0 +1,1265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>
+    <%= pageTitle %>
+  </title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <style>
+    /* BASE LAYOUT */
+    body,
+    html {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      font-family: "Inter", sans-serif;
+      background-color: #f4f7f9;
+    }
+
+    .dashboard-layout {
+      display: flex;
+      height: 100%;
+    }
+
+    /* SIDEBAR STYLING */
+    .sidebar {
+      width: 250px;
+      background-color: #34495e;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 0;
+      box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .sidebar .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      padding: 0 20px 20px;
+      border-bottom: 1px solid #4a637d;
+      margin-bottom: 20px;
+    }
+
+    .sidebar nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .sidebar nav ul li a {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 12px 20px;
+      color: white;
+      text-decoration: none;
+      font-size: 1rem;
+      transition: background-color 0.2s;
+    }
+
+    .sidebar nav ul li a:hover,
+    .sidebar nav ul li.active a {
+      background-color: #4a637d;
+    }
+
+    .sidebar .logout-area {
+      margin-top: auto;
+      padding: 20px;
+    }
+
+    .sidebar .btn-customer-site,
+    .sidebar .btn-logout {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      text-align: center;
+      text-decoration: none;
+      color: white;
+      transition: background-color 0.2s;
+      border: none;
+    }
+
+    /* MAIN CONTENT & HEADER */
+    .main-content {
+      flex-grow: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
+
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .user-profile {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background-color: white;
+      padding: 8px 15px;
+      border-radius: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* STAT CARDS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .stat-card {
+      background-color: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    /* ========================================================= */
+    /* CORE LAYOUT: 66% Kanban / 33% Floor Plan */
+    /* ========================================================= */
+    .reservation-section {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      /* 66% Kanban / 33% Floor Plan */
+      gap: 30px;
+    }
+
+    /* KANBAN BOARD (Occupies 2fr) */
+    .kanban-board {
+      grid-column: 1 / span 1;
+      display: grid;
+      grid-template-columns: repeat(3,
+          1fr);
+      /* 3 equal columns side-by-side */
+      gap: 20px;
+    }
+
+    .reservation-column {
+      background-color: #ecf0f1;
+      padding: 10px;
+      border-radius: 8px;
+      min-height: 400px;
+    }
+
+    .reservation-column h3 {
+      margin-top: 0;
+      padding-bottom: 10px;
+      border-bottom: 2px solid white;
+      color: #34495e;
+      min-height: 30px;
+    }
+
+    .reservation-entry {
+      background-color: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      border-left: 5px solid;
+      min-height: 90px;
+    }
+
+    /* FLOOR PLAN OVERVIEW (Occupies 1fr) */
+    .floor-plan-overview {
+      grid-column: 2 / span 1;
+      padding: 20px;
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .floor-plan-overview h2 {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #ecf0f1;
+      padding-bottom: 10px;
+      margin-bottom: 15px;
+    }
+
+    /* 📌 DYNAMIC FLOOR PLAN VISUALS */
+    .floor-plan-wrapper {
+      position: relative;
+      width: 100%;
+      height: 250px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      overflow: auto;
+      background-color: white;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='20' height='20'><circle cx='10' cy='10' r='1' fill='%23e0e0e0'/></svg>");
+      background-size: 20px 20px;
+    }
+
+    /* 2. DYNAMIC TABLE GRID - Uses absolute positioning with scaling */
+    #dashboardFloorPlan {
+      position: absolute;
+      width: 1000px;
+      height: 1000px;
+      transform-origin: top left;
+      transform: scale(0.3);
+      /* Scale down for widget view */
+    }
+
+    /* 3. STYLING FOR DYNAMIC TABLE ITEMS */
+    #dashboardFloorPlan .table-item {
+      position: absolute;
+      /* ESSENTIAL for X/Y coordinates */
+
+      width: auto;
+      height: 50px;
+      padding: 5px;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      line-height: 1.1;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.2s;
+    }
+
+    /* 4. SHAPE STYLING - REPLICATION */
+    #dashboardFloorPlan .table-item.round {
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+    }
+
+    #dashboardFloorPlan .table-item.rect,
+    #dashboardFloorPlan .table-item.square {
+      border-radius: 4px;
+      width: 70px;
+      height: 50px;
+    }
+
+    #dashboardFloorPlan .table-item.booth {
+      width: 90px;
+      height: 40px;
+      border-radius: 6px;
+    }
+
+    /* 5. STATUS COLORING */
+    #dashboardFloorPlan .status-available {
+      background-color: #2ecc71;
+      color: white;
+    }
+
+    #dashboardFloorPlan .status-occupied {
+      background-color: #e74c3c;
+      color: white;
+    }
+
+    #dashboardFloorPlan .status-reserved {
+      background-color: #f39c12;
+      color: white;
+    }
+
+    #dashboardFloorPlan .status-cleaning {
+      background-color: #3498db;
+      color: white;
+    }
+
+    /* TABLE STATUS CHANGE CONTEXT MENU */
+    .context-menu {
+      position: absolute;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      z-index: 1000;
+      min-width: 150px;
+      display: none;
+    }
+
+    .status-option {
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.1s;
+    }
+
+    .status-option:hover {
+      background-color: #f0f0f0;
+    }
+
+    /* STATUS INFO STYLING (The list of counts) */
+    #dashboardTableStatusInfo {
+      font-size: 0.9rem;
+      margin-top: 10px;
+      padding: 10px 0;
+      border-top: 1px solid #ecf0f1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    #dashboardTableStatusInfo p {
+      margin: 0;
+      line-height: 1.4;
+      font-weight: 500;
+      color: #34495e;
+      position: relative;
+      padding-left: 15px;
+    }
+
+    #dashboardTableStatusInfo p::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    /* Utility */
+    .actions-grid {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .btn {
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: background-color 0.2s;
+      border: none;
+      color: white;
+    }
+
+    .menu-list ul li {
+      list-style: disc;
+      margin-left: 15px;
+      color: #2c3e50;
+    }
+
+    .menu-list strong {
+      color: #34495e;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="dashboard-layout">
+    <aside class="sidebar">
+      <div class="logo">QuickSEAT</div>
+
+      <nav>
+        <ul>
+          <li class="active">
+            <a href="/restaurant-dashboard">Dashboard</a>
+          </li>
+          <li><a href="/restaurant-dashboard/menu">Menu</a></li>
+          <li><a href="/restaurant-dashboard/floorplan">Floor Plan</a></li>
+          <li><a href="/restaurant-dashboard/calendar">Calendar</a></li>
+          <li><a href="/restaurant-dashboard/edit">Edit</a></li>
+        </ul>
+      </nav>
+
+      <div class="logout-area">
+        <a href="/" class="btn-customer-site">Back to Customer Site</a>
+        <a href="/logout" class="btn-logout"
+          onclick="event.preventDefault(); document.getElementById('logout-restaurant-form').submit();">Logout</a>
+        <form id="logout-restaurant-form" action="/logout" method="GET" style="display: none"></form>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="dashboard-header">
+        <h1>Dashboard</h1>
+        <div class="user-profile">
+          <span>Thu, <%= new Date().toLocaleDateString('en-US', { day: 'numeric' , month: 'short' }) %></span>
+          <div>
+            <strong>
+              <%= restaurant.name || "Manager" %>
+            </strong>
+            <div style="font-size: 0.8rem; color: #7f8c8d">
+              Restaurant Manager
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon icon-purple">📅</div>
+          <div class="stat-details">
+            <h3>
+              <%= pendingRequests.length %>
+            </h3>
+            <p>Pending Approvals</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-orange">⏳</div>
+          <div class="stat-details">
+            <h3>
+              <%= confirmedRequests.length %>
+            </h3>
+            <p>Confirmed Bookings</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-green">✅</div>
+          <div class="stat-details">
+            <h3>
+              <%= rejectedRequests.length %>
+            </h3>
+            <p>Rejected Bookings</p>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon icon-blue">👥</div>
+          <div class="stat-details">
+            <h3>
+              <%= pendingRequests.length + confirmedRequests.length %>
+            </h3>
+            <p>Active Reservations</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="reservation-section">
+        <div class="kanban-board">
+          <div class="reservation-column">
+            <h3>Pending (<%= pendingRequests.length %>)</h3>
+            <% if (pendingRequests.length> 0) { %> <% pendingRequests.forEach(booking=> { %>
+                <div class="reservation-entry pending" data-id="<%= booking._id %>">
+                  <strong>
+                    <%= new Date(booking.dateTime).toLocaleTimeString([], { hour: '2-digit' , minute: '2-digit' }) %>
+                  </strong>
+                  <div class="meta">
+                    <span>👤 <%= booking.customer ? booking.customer.fullName : 'Guest' %></span>
+                    | <span>👥 <%= booking.partySize %></span>
+                  </div>
+
+                  <% if (booking.menuItems && booking.menuItems.length> 0) { %>
+                    <div class="menu-list" style="margin-top: 5px; font-size: 0.9rem">
+                      🍽️ <strong>Menu Selected:</strong>
+                      <ul style="margin: 5px 0 0 15px; padding: 0">
+                        <% booking.menuItems.forEach(item=> { %>
+                          <li>
+                            <%= item.name %>
+                              <% if (item.quantity) { %> x<%= item.quantity %>
+                                  <% } %>
+                                    <% if (item.price) { %> — ₹<%= item.price %>
+                                        <% } %>
+                          </li>
+                          <% }) %>
+                      </ul>
+                    </div>
+                    <% } %>
+                      <% if (booking.notes) { %>
+                        <p class="badge-notes">Note: <%= booking.notes %>
+                        </p>
+                        <% } %>
+
+                          <div class="actions">
+                            <button class="btn-action btn-approve" data-id="<%= booking._id %>">
+                              Approve
+                            </button>
+                            <button class="btn-action btn-reject" data-id="<%= booking._id %>">
+                              Reject
+                            </button>
+                          </div>
+                </div>
+                <% }); %>
+                  <% } else { %>
+                    <p style="
+                  text-align: center;
+                  font-size: 0.9rem;
+                  color: #7f8c8d;
+                  padding-top: 10px;
+                ">
+                      No new requests.
+                    </p>
+                    <% } %>
+          </div>
+
+          <div class="reservation-column">
+            <h3>Confirmed (<%= confirmedRequests.length %>)</h3>
+            <% if (confirmedRequests.length> 0) { %> <% confirmedRequests.forEach(booking=> { %>
+                <div class="reservation-entry confirmed" data-id="<%= booking._id %>">
+                  <strong>
+                    <%= new Date(booking.dateTime).toLocaleTimeString([], { hour: '2-digit' , minute: '2-digit' }) %>
+                  </strong>
+                  <div class="meta">
+                    <span>👤 <%= booking.customer ? booking.customer.fullName : 'Guest' %></span>
+                    | <span>👥 <%= booking.partySize %></span>
+                  </div>
+                  <span class="badge-notes" style="color: #2ecc71">Confirmed</span>
+                </div>
+                <% }); %>
+                  <% } else { %>
+                    <p style="
+                  text-align: center;
+                  font-size: 0.9rem;
+                  color: #7f8c8d;
+                  padding-top: 10px;
+                ">
+                      No confirmed bookings.
+                    </p>
+                    <% } %>
+          </div>
+
+          <div class="reservation-column">
+            <h3>Rejected (<%= rejectedRequests.length %>)</h3>
+            <% if (rejectedRequests.length> 0) { %> <% rejectedRequests.forEach(booking=> { %>
+                <div class="reservation-entry rejected" data-id="<%= booking._id %>">
+                  <strong>
+                    <%= new Date(booking.dateTime).toLocaleTimeString([], { hour: '2-digit' , minute: '2-digit' }) %>
+                  </strong>
+                  <div class="meta">
+                    <span>👤 <%= booking.customer ? booking.customer.fullName : 'Guest' %></span>
+                    | <span>👥 <%= booking.partySize %></span>
+                  </div>
+                  <span class="badge-notes" style="color: #e74c3c">Rejected</span>
+                </div>
+                <% }); %>
+                  <% } else { %>
+                    <p style="
+                  text-align: center;
+                  font-size: 0.9rem;
+                  color: #7f8c8d;
+                  padding-top: 10px;
+                ">
+                      No rejected bookings.
+                    </p>
+                    <% } %>
+          </div>
+        </div>
+
+        <div class="floor-plan-overview">
+          <h2>
+            Floor Plan Overview
+            <select id="floorSelector" onchange="loadFloorPlanData(this.value)" style="
+                  padding: 5px;
+                  border-radius: 4px;
+                  border: 1px solid #ccc;
+                  margin-left: 10px;
+                "></select>
+            <a href="/restaurant-dashboard/floorplan" style="font-size: 0.9rem; text-decoration: none">Full View →</a>
+          </h2>
+
+          <div class="floor-plan-wrapper">
+            <div class="floor-plan" id="dashboardFloorPlan"></div>
+          </div>
+
+          <div class="table-info" id="dashboardTableStatusInfo"></div>
+
+          <div style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+                padding-top: 10px;
+                border-top: 1px solid #eee;
+              ">
+            <div style="font-weight: 600; color: #34495e">
+              Floor Visualization Controls:
+            </div>
+            <div style="display: flex; gap: 5px">
+              <button class="btn btn-default" onclick="adjustZoom(-0.1)">
+                🔍 Out
+              </button>
+              <span style="
+                    padding: 0 10px;
+                    font-weight: bold;
+                    border: 1px solid #ddd;
+                    border-radius: 4px;
+                    display: flex;
+                    align-items: center;
+                  " id="zoomLevelDisplay">100%</span>
+              <button class="btn btn-default" onclick="adjustZoom(0.1)">
+                🔍 In
+              </button>
+              <button class="btn btn-default" onclick="adjustZoom(0, true)">
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <h2 style="margin-top: 30px">Quick Actions</h2>
+          <div class="actions-grid">
+            <button class="btn btn-success" onclick="location.href='/restaurant-dashboard/floorplan'">
+              Edit Floor Plan
+            </button>
+            <button class="btn btn-info" onclick="location.href='/restaurant-dashboard/calendar'">
+              View Calendar
+            </button>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div id="statusMenu" class="context-menu" style="display: none"></div>
+
+  <script>
+    // ====================================
+    // GLOBAL STATE & INITIALIZATION
+    // ====================================
+    const socket = io();
+    const restaurantId = "<%= restaurant._id %>";  // ✅ FIXED: Use MongoDB _id instead of custom restaurantId
+    let dashboardAllTables = [];
+    let dashboardAllAreas = [];
+    let currentDashboardFloorId = null;
+    let currentZoomLevel = 0.3; // Initial scale factor
+    const FLOOR_PLAN_DIV_ID = "dashboardFloorPlan";
+    socket.emit("joinRestaurant", restaurantId);
+    console.log("🔌 Connected to Socket.IO. Joined room: restaurant_" + restaurantId);
+
+    // ====================================
+    // SWEETALERT2 STYLISH NOTIFICATION
+    // ====================================
+    function showNotification(message, type = "success") {
+      Swal.fire({
+        title: type === "success" ? "✅ Success" : "⚠️ Error",
+        text: message,
+        icon: type,
+        showConfirmButton: false,
+        timer: 1800,
+        toast: true,
+        position: "top-end",
+        background: type === "success" ? "#d4edda" : "#f8d7da",
+        color: "#333",
+        customClass: {
+          popup: "animate__animated animate__fadeInDown",
+        },
+      });
+    }
+
+    // ====================================
+    // HELPER: CREATE PENDING RESERVATION CARD
+    // ====================================
+    function createPendingCard(booking) {
+      const div = document.createElement("div");
+      div.className = "reservation-entry pending";
+      div.dataset.id = booking._id;
+
+      const time = new Date(booking.dateTime).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+      const name = booking.customer
+        ? booking.customer.fullName || "Guest"
+        : "Guest";
+
+      let html = `<strong>${time}</strong>
+      <div class="meta">
+        <span>👤 ${name}</span> | <span>👥 ${booking.partySize}</span>
+      </div>`;
+
+      if (booking.menuItems && booking.menuItems.length > 0) {
+        html += `<div class="menu-list" style="margin-top: 5px; font-size: 0.9rem">
+        🍽️ <strong>Menu Selected:</strong>
+        <ul style="margin: 5px 0 0 15px; padding: 0">`;
+        booking.menuItems.forEach((item) => {
+          const itemName = item.name || item._id || "Unknown Item";
+          const quantity = item.quantity ? `x${item.quantity}` : "";
+          const price = item.price ? `— ₹${item.price}` : "";
+          html += `<li>${itemName} ${quantity} ${price}</li>`;
+        });
+        html += "</ul></div>";
+      }
+
+      if (booking.notes) {
+        html += `<p class="badge-notes">Note: ${booking.notes}</p>`;
+      }
+
+      html += `<div class="actions">
+      <button class="btn-action btn-approve" data-id="${booking._id}">Approve</button>
+      <button class="btn-action btn-reject" data-id="${booking._id}">Reject</button>
+    </div>`;
+
+      div.innerHTML = html;
+      return div;
+    }
+
+    // ====================================
+    // ZOOM AND PAN LOGIC
+    // ====================================
+    window.adjustZoom = function (delta, reset = false) {
+      const floorDiv = document.getElementById(FLOOR_PLAN_DIV_ID);
+      if (!floorDiv) return;
+      if (reset) {
+        currentZoomLevel = 0.3;
+      } else {
+        currentZoomLevel = Math.min(
+          Math.max(0.1, currentZoomLevel + delta),
+          2.0
+        );
+      }
+      floorDiv.style.transform = `scale(${currentZoomLevel})`;
+      document.getElementById("zoomLevelDisplay").textContent =
+        Math.round(currentZoomLevel * 100) + "%";
+    };
+
+    // ====================================
+    // FLOOR PLAN FUNCTIONS (DE-DUPED & FIXED)
+    // ====================================
+    async function fetchFloorPlanInitialData() {
+      try {
+        const [areasRes, tablesRes] = await Promise.all([
+          fetch(`/areas/by-restaurant/${restaurantId}`),
+          fetch(`/tables/by-restaurant/${restaurantId}`),
+        ]);
+        if (!areasRes.ok || !tablesRes.ok) {
+          console.error("API Error:", areasRes.status, tablesRes.status);
+          return;
+        }
+        dashboardAllAreas = await areasRes.json();
+        dashboardAllTables = await tablesRes.json();
+        if (dashboardAllAreas.length > 0) {
+          currentDashboardFloorId = dashboardAllAreas[0]._id;
+          renderFloorSelector();
+          loadFloorPlanData(currentDashboardFloorId);
+        } else {
+          document.getElementById(FLOOR_PLAN_DIV_ID).innerHTML =
+            '<p style="text-align: center; color: #7f8c8d;">No floor areas found.</p>';
+        }
+      } catch (error) {
+        console.error("Fetch Error:", error);
+      }
+    }
+
+    function renderFloorSelector() {
+      const selector = document.getElementById("floorSelector");
+      selector.innerHTML = dashboardAllAreas
+        .map(
+          (area) =>
+            `<option value="${area._id}" ${area._id === currentDashboardFloorId ? "selected" : ""
+            }>${area.areaIcon || "🏢"} ${area.areaName}</option>`
+        )
+        .join("");
+    }
+
+    window.loadFloorPlanData = function (areaId) {
+      currentDashboardFloorId = areaId;
+      const floorPlan = document.getElementById(FLOOR_PLAN_DIV_ID);
+      const statusInfo = document.getElementById("dashboardTableStatusInfo"); // FIXED: Correct var
+      const tablesInArea = dashboardAllTables.filter(
+        (t) => t.area === areaId
+      );
+      const counts = {
+        available: 0,
+        occupied: 0,
+        reserved: 0,
+        cleaning: 0,
+        total: tablesInArea.length,
+      };
+      tablesInArea.forEach((t) => {
+        const status = t.tableStatus || "available";
+        counts[status] = (counts[status] || 0) + 1;
+      });
+      floorPlan.innerHTML = "";
+      floorPlan.style.width = "1000px";
+      floorPlan.style.height = "1000px";
+      floorPlan.style.transform = `scale(${currentZoomLevel})`;
+      tablesInArea.forEach((table) => {
+        const tableDiv = document.createElement("div");
+        tableDiv.className = `table-item ${table.tableShape || "round"
+          } status-${table.tableStatus || "available"}`;
+        tableDiv.style.left = `${table.positionX / 3}px`;
+        tableDiv.style.top = `${table.positionY / 3}px`;
+        tableDiv.onclick = (e) => showStatusMenu(e, table._id, table.area);
+        tableDiv.innerHTML = `<div class="table-number">${table.tableNumber}</div><div class="table-capacity">(${table.capacity})</div>`;
+        floorPlan.appendChild(tableDiv);
+      });
+      if (tablesInArea.length === 0) {
+        floorPlan.innerHTML =
+          '<p style="text-align: center; color: #7f8c8d; padding-top: 50px;">No tables configured for this area.</p>';
+      }
+      statusInfo.innerHTML = `
+      <p>Total Tables: <strong>${counts.total}</strong></p>
+      <p class="status-available">Available: <strong>${counts.available}</strong></p>
+      <p class="status-occupied">Occupied: <strong>${counts.occupied}</strong></p>
+      <p class="status-reserved">Reserved: <strong>${counts.reserved}</strong></p>
+      <p class="status-cleaning">Cleaning: <strong>${counts.cleaning}</strong></p>
+    `;
+    };
+
+    // STATUS MENU & UPDATE (UNCHANGED)
+    window.showStatusMenu = function (e, tableId, areaId) {
+      e.stopPropagation();
+      document
+        .querySelectorAll(".context-menu")
+        .forEach((m) => (m.style.display = "none"));
+      const menu = document.getElementById("statusMenu");
+      const rect = e.target.getBoundingClientRect();
+      menu.style.left = rect.left + "px";
+      menu.style.top = rect.top + rect.height + "px";
+      menu.innerHTML = `
+      <div class="status-option available" onclick="updateTableStatus('${tableId}', 'available', this.parentNode)">✅ Available</div>
+      <div class="status-option occupied" onclick="updateTableStatus('${tableId}', 'occupied', this.parentNode)">🔴 Occupied</div>
+      <div class="status-option reserved" onclick="updateTableStatus('${tableId}', 'reserved', this.parentNode)">🟠 Reserved</div>
+      <div class="status-option cleaning" onclick="updateTableStatus('${tableId}', 'cleaning', this.parentNode)">🧹 Cleaning</div>
+    `;
+      menu.style.display = "block";
+      setTimeout(() => {
+        document.addEventListener(
+          "click",
+          (ev) => {
+            if (
+              !ev.target.closest(".table-item") &&
+              !ev.target.closest(".context-menu")
+            ) {
+              menu.style.display = "none";
+            }
+          },
+          { once: true }
+        );
+      }, 10);
+    };
+
+    async function updateTableStatus(tableId, newStatus, menu) {
+      try {
+        // Send PATCH request to server
+        const res = await fetch(`/tables/${tableId}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tableStatus: newStatus }),
+        });
+
+        if (!res.ok) {
+          showNotification("❌ Failed to update table status", "error");
+          if (menu) menu.style.display = "none";
+          return;
+        }
+
+        // Update local data
+        const table = dashboardAllTables.find((t) => t._id === tableId);
+        const currentAreaId = table?.area || currentDashboardFloorId;
+        if (table) table.tableStatus = newStatus;
+
+        // Emit event for real-time sync across dashboards
+        socket.emit("tableStatusChanged", {
+          restaurantId,
+          areaId: currentAreaId,
+          tableId,
+          newStatus,
+        });
+
+        // Update the UI instantly
+        showNotification(`✅ Table status set to "${newStatus}"`, "success");
+        loadFloorPlanData(currentAreaId);
+      } catch (error) {
+        console.error("⚠️ Error updating status:", error);
+        showNotification("⚠️ Network error during status update.", "error");
+      } finally {
+        // Always close the menu even if there's an error
+        if (menu) menu.style.display = "none";
+      }
+    }
+
+    // ========================================
+    // SOCKET LISTENERS — REALTIME SYNC
+    // ========================================
+
+    // When another manager changes a table's status
+    socket.on("tableStatusChanged", (data) => {
+      const { tableId, newStatus, areaId } = data;
+
+      const table = dashboardAllTables.find((t) => t._id === tableId);
+      if (table) table.tableStatus = newStatus;
+
+      // Refresh only if current floor is affected
+      if (areaId === currentDashboardFloorId) {
+        loadFloorPlanData(currentDashboardFloorId);
+      }
+    });
+
+    // When a new booking is made
+    socket.on("newBooking", (data) => {
+      console.log("📡 New booking received:", data);
+      if (data.restaurantId !== restaurantId) return;
+
+      const pendingCol = document.querySelector(
+        ".kanban-board .reservation-column:nth-child(1)"
+      );
+      const newCard = createPendingCard(data.booking);
+      if (!pendingCol || !newCard) return;
+
+      const noRequestsMsg = pendingCol.querySelector("p");
+      if (noRequestsMsg) noRequestsMsg.remove();
+
+      // Smooth appear animation
+      newCard.style.opacity = "0";
+      newCard.style.transform = "translateY(-10px)";
+      pendingCol.appendChild(newCard);
+
+      setTimeout(() => {
+        newCard.style.transition = "all 0.3s ease";
+        newCard.style.opacity = "1";
+        newCard.style.transform = "translateY(0)";
+      }, 10);
+
+      updateStats();
+      showNotification("🔔 New booking request received!", "info");
+    });
+
+    // ====================================
+    // RESERVATION APPROVAL/REJECTION HANDLERS (FIXED: Confirm + Better Handling)
+    // ====================================
+    function updateStats() {
+      console.log("🔄 Updating stats...");
+      const pendingCol = document.querySelector(
+        ".kanban-board .reservation-column:nth-child(1)"
+      );
+      const confirmedCol = document.querySelector(
+        ".kanban-board .reservation-column:nth-child(2)"
+      );
+      const rejectedCol = document.querySelector(
+        ".kanban-board .reservation-column:nth-child(3)"
+      );
+
+      const pendingCount = pendingCol
+        ? pendingCol.querySelectorAll(".reservation-entry").length
+        : 0;
+      const confirmedCount = confirmedCol
+        ? confirmedCol.querySelectorAll(".reservation-entry").length
+        : 0;
+      const rejectedCount = rejectedCol
+        ? rejectedCol.querySelectorAll(".reservation-entry").length
+        : 0;
+      const activeCount = pendingCount + confirmedCount;
+
+      const statHeaders = document.querySelectorAll(
+        ".stats-grid .stat-card h3"
+      );
+      if (statHeaders.length >= 4) {
+        statHeaders[0].textContent = pendingCount;
+        statHeaders[1].textContent = confirmedCount;
+        statHeaders[2].textContent = rejectedCount;
+        statHeaders[3].textContent = activeCount;
+      }
+
+      if (pendingCol && pendingCol.querySelector("h3"))
+        pendingCol.querySelector(
+          "h3"
+        ).textContent = `Pending (${pendingCount})`;
+      if (confirmedCol && confirmedCol.querySelector("h3"))
+        confirmedCol.querySelector(
+          "h3"
+        ).textContent = `Confirmed (${confirmedCount})`;
+      if (rejectedCol && rejectedCol.querySelector("h3"))
+        rejectedCol.querySelector(
+          "h3"
+        ).textContent = `Rejected (${rejectedCount})`;
+
+      console.log("📊 Stats updated:", {
+        pendingCount,
+        confirmedCount,
+        rejectedCount,
+        activeCount,
+      });
+    }
+
+    function moveReservationCard(
+      card,
+      targetColumn,
+      newClass,
+      badgeText,
+      badgeColor
+    ) {
+      console.log("🖱️ Moving card to", newClass);
+      if (!card || !targetColumn) {
+        console.error("❌ Move failed: Missing card or column");
+        return;
+      }
+
+      const newCard = card.cloneNode(true);
+      if (newClass !== "pending") {
+        const actions = newCard.querySelector(".actions");
+        if (actions) actions.remove();
+      }
+
+      newCard.classList.remove("pending");
+      newCard.classList.add(newClass);
+
+      let metaDiv = newCard.querySelector(".meta");
+      if (!metaDiv) {
+        metaDiv = document.createElement("div");
+        metaDiv.className = "meta";
+        newCard.insertBefore(metaDiv, newCard.firstChild.nextSibling);
+      }
+
+      let badge = metaDiv.querySelector(".badge-notes");
+      if (!badge) {
+        badge = document.createElement("span");
+        badge.className = "badge-notes";
+        metaDiv.appendChild(badge);
+      }
+      badge.textContent = badgeText;
+      badge.style.color = badgeColor;
+
+      targetColumn.appendChild(newCard);
+      card.remove();
+
+      console.log("✅ UI Move Success");
+      updateStats();
+    }
+
+    // FIXED: Added confirm(), safe JSON parse, mapped statuses, more logs
+    async function handleStatusChange(bookingId, newStatus, button) {
+      console.log("🔄 Status change initiated:", { bookingId, newStatus });
+
+      // NEW: Confirmation dialog
+      const action = newStatus === "confirmed" ? "approve" : "reject";
+      if (!confirm(`Are you sure you want to ${action} this booking?`)) {
+        console.log("❌ User cancelled action");
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = `${action.charAt(0).toUpperCase() + action.slice(1)
+        }ing...`;
+
+      try {
+        const res = await fetch(`/bookings/${bookingId}/status`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: newStatus }), // Sends 'confirmed'/'rejected'
+        });
+
+        console.log("📡 Fetch response:", { status: res.status, ok: res.ok });
+
+        // FIXED: Safe parse - check content-type first
+        if (!res.ok) {
+          const errorText = await res.text();
+          throw new Error(
+            `Server error ${res.status}: ${errorText.substring(0, 100)}...`
+          );
+        }
+
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error(
+            "Server returned non-JSON (e.g., HTML error page - check route)"
+          );
+        }
+
+        const data = await res.json();
+        console.log("✅ Parsed data:", data);
+
+        if (!data.success) {
+          throw new Error(data.message || data.error || "Update failed");
+        }
+
+        // Find card
+        let card = document.querySelector(
+          `.reservation-entry[data-id="${bookingId}"]`
+        );
+        if (!card) {
+          throw new Error("Card not found in DOM");
+        }
+
+        // Map to target (consistent with frontend statuses)
+        let targetColumn, newClass, badgeText, badgeColor;
+        if (newStatus === "confirmed") {
+          targetColumn = document.querySelector(
+            ".kanban-board .reservation-column:nth-child(2)"
+          );
+          newClass = "confirmed";
+          badgeText = "Confirmed";
+          badgeColor = "#2ecc71";
+        } else if (newStatus === "rejected") {
+          targetColumn = document.querySelector(
+            ".kanban-board .reservation-column:nth-child(3)"
+          );
+          newClass = "rejected";
+          badgeText = "Rejected";
+          badgeColor = "#e74c3c";
+        }
+
+        if (!targetColumn) {
+          throw new Error("Target column not found");
+        }
+
+        moveReservationCard(
+          card,
+          targetColumn,
+          newClass,
+          badgeText,
+          badgeColor
+        );
+
+        // Emit socket for real-time
+        socket.emit("bookingStatusChanged", {
+          restaurantId,
+          bookingId,
+          newStatus,
+        });
+
+        showNotification(`Booking ${action}ed successfully!`, "success");
+      } catch (error) {
+        console.error("❌ Full error:", error);
+        showNotification(
+          `Failed: ${error.message}\nCheck console (F12) for details.`,
+          "error"
+        );
+        button.disabled = false;
+        button.textContent = newStatus === "confirmed" ? "Approve" : "Reject";
+      }
+    }
+
+    socket.on("bookingStatusChanged", (data) => {
+      console.log("📡 Real-time update received:", data);
+
+      // ✅ FIXED: Handle flexible ID field names
+      const bookingId = data.bookingId || data.reservationId;
+      if (!bookingId) {
+        console.warn("⚠️ No booking ID in event data");
+        return;
+      }
+
+      // ✅ FIXED: Map backend status to frontend status
+      const statusMap = {
+        'approved': 'confirmed',
+        'declined': 'rejected',
+        'confirmed': 'confirmed',
+        'rejected': 'rejected'
+      };
+
+      const displayStatus = data.newStatus || statusMap[data.status] || data.status;
+
+      console.log(`🔄 Processing status change: ${data.status} → ${displayStatus}`);
+
+      let card = document.querySelector(`[data-id="${bookingId}"]`);
+
+
+      if (!card) {
+        card = Array.from(document.querySelectorAll(".reservation-entry")).find(el => el.dataset.id === data.bookingId);
+      }
+      if (!card) {
+        console.warn("⚠️ Real-time: Card not found for", data.bookingId);
+        return;
+      }
+
+      let targetColumn, newClass, badgeText, badgeColor;
+      if (data.newStatus === "confirmed") {
+        targetColumn = document.querySelector(".kanban-board .reservation-column:nth-child(2)");
+        newClass = "confirmed";
+        badgeText = "Confirmed";
+        badgeColor = "#2ecc71";
+      } else if (data.newStatus === "rejected") {
+        targetColumn = document.querySelector(".kanban-board .reservation-column:nth-child(3)");
+        newClass = "rejected";
+        badgeText = "Rejected";
+        badgeColor = "#e74c3c";
+      }
+      if (!targetColumn) return;
+
+      moveReservationCard(card, targetColumn, newClass, badgeText, badgeColor);
+      showNotification(`Booking ${data.newStatus} by another session!`, "info");
+    });
+
+    // Event listener for buttons
+    document.addEventListener("click", (e) => {
+      if (e.target.classList.contains("btn-approve")) {
+        const bookingId = e.target.dataset.id;
+        handleStatusChange(bookingId, "confirmed", e.target);
+      } else if (e.target.classList.contains("btn-reject")) {
+        const bookingId = e.target.dataset.id;
+        handleStatusChange(bookingId, "rejected", e.target);
+      }
+    });
+
+    // ====================================
+    // SHARE FUNCTIONALITY (Copied and Adapted from search-result.ejs)
+    // ====================================
+    const shareModal = document.getElementById("share-modal");
+    const closeShareBtn = document.querySelector(".close-modal-share");
+
+    document.querySelectorAll(".btn-share").forEach((button) => {
+      button.addEventListener("click", (e) => {
+        e.stopPropagation();
+        const restaurantURL = `${window.location.origin}/restaurants/${restaurantId}`;
+
+        if (shareModal) {
+          // Set links
+          shareModal.querySelector(
+            ".share-link.facebook"
+          ).href = `https://www.facebook.com/sharer/sharer.php?u=${restaurantURL}`;
+          shareModal.querySelector(
+            ".share-link.twitter"
+          ).href = `https://twitter.com/intent/tweet?url=${restaurantURL}`;
+          shareModal.querySelector(
+            ".share-link.whatsapp"
+          ).href = `https://api.whatsapp.com/send?text=${restaurantURL}`;
+          shareModal.querySelector("#share-link-input").value = restaurantURL;
+
+          shareModal.style.display = "block";
+        }
+      });
+    });
+
+    if (closeShareBtn) {
+      closeShareBtn.addEventListener("click", () => {
+        if (shareModal) shareModal.style.display = "none";
+      });
+    }
+
+    window.addEventListener("click", (e) => {
+      if (e.target == shareModal) {
+        if (shareModal) shareModal.style.display = "none";
+      }
+    });
+
+    const copyLinkBtn = document.getElementById("copy-link-btn");
+    if (copyLinkBtn) {
+      copyLinkBtn.addEventListener("click", () => {
+        const linkInput = document.getElementById("share-link-input");
+        linkInput.select();
+        document.execCommand("copy");
+        copyLinkBtn.textContent = "Copied!";
+        setTimeout(() => {
+          copyLinkBtn.textContent = "Copy Link";
+        }, 2000);
+      });
+    }
+
+    // ====================================
+    // INITIALIZATION
+    // ====================================
+    document.addEventListener("DOMContentLoaded", () => {
+      fetchFloorPlanInitialData();
+      const zoomDisplay = document.getElementById("zoomLevelDisplay");
+      if (zoomDisplay)
+        zoomDisplay.textContent = Math.round(currentZoomLevel * 100) + "%";
+      updateStats();
+      console.log(
+        "🚀 Dashboard loaded - Socket joined room: restaurant_" + restaurantId
+      );
+    });
+  </script>
+</body>
+
+</html>

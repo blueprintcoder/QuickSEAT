@@ -1,0 +1,56 @@
+</main>
+
+    <!-- Manager Footer -->
+    <footer class="manager-footer">
+        <div class="footer-content">
+            <p>&copy; 2025 QuickSEAT Manager Portal. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="/help">Help</a>
+                <a href="/support">Support</a>
+                <a href="/privacy">Privacy</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Mobile menu toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const sidebar = document.querySelector('.manager-sidebar');
+
+        if (mobileMenuToggle) {
+            mobileMenuToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('active');
+            });
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768) {
+                if (!sidebar.contains(e.target) && !mobileMenuToggle.contains(e.target)) {
+                    sidebar.classList.remove('active');
+                }
+            }
+        });
+
+        // Update date and time
+        function updateDateTime() {
+            const now = new Date();
+            const dateElement = document.getElementById('currentDate');
+            const timeElement = document.getElementById('currentTime');
+
+            if (dateElement) {
+                const dateOptions = { weekday: 'short', month: 'short', day: 'numeric' };
+                dateElement.textContent = now.toLocaleDateString('en-IN', dateOptions);
+            }
+
+            if (timeElement) {
+                const timeOptions = { hour: '2-digit', minute: '2-digit' };
+                timeElement.textContent = now.toLocaleTimeString('en-IN', timeOptions);
+            }
+        }
+
+        updateDateTime();
+        setInterval(updateDateTime, 60000); // Update every minute
+    </script>
+</body>
+</html>

@@ -1,0 +1,355 @@
+/* ==================== AUTHENTICATION PAGES STYLES ==================== */
+
+.auth-section {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #FAF9F6 0%, #cfc9c2 100%);
+    padding: 3rem 1rem;
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 500px;   
+}
+
+.auth-card {
+    background-color: white;
+    border-radius: 20px;
+    margin-top: 4rem;
+    padding: 3rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+/* Auth Header */
+.auth-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.auth-header h1 {
+    font-size: 2rem;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.auth-header p {
+    color: #7f8c8d;
+    font-size: 1rem;
+}
+
+/* Alert Messages */
+.alert {
+    padding: 1rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    font-weight: 500;
+}
+
+.alert-error {
+    background-color: #fee;
+    color: #c33;
+    border: 1px solid #fcc;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+/* Auth Form */
+.auth-form {
+    margin-bottom: 1.5rem;
+}
+
+.auth-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.auth-form label {
+    display: block;
+    color: #555;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    font-size: 0.95rem;
+}
+
+.auth-form input,
+.auth-form select {
+    width: 100%;
+    padding: 0.9rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.auth-form input:focus,
+.auth-form select:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.required {
+    color: #e74c3c;
+    font-weight: 700;
+}
+
+.form-help {
+    display: block;
+    color: #888;
+    font-size: 0.85rem;
+    margin-top: 0.3rem;
+}
+
+/* Form Options */
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.remember-me {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.remember-me input[type="checkbox"] {
+    width: auto;
+    cursor: pointer;
+}
+
+.remember-me label {
+    margin: 0;
+    cursor: pointer;
+    font-weight: 500;
+    color: #666;
+}
+
+.forgot-link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+}
+
+.forgot-link:hover {
+    color: #5568d3;
+}
+
+/* Auth Button */
+.btn-auth {
+    width: 100%;
+    padding: 1rem;
+    background-color: #667eea;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-auth:hover {
+    background-color: #5568d3;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+}
+
+.btn-auth:active {
+    transform: translateY(0);
+}
+
+/* Auth Footer */
+.auth-footer {
+    text-align: center;
+    margin-top: 1.5rem;
+}
+
+.auth-footer p {
+    color: #666;
+    font-size: 0.95rem;
+}
+
+.auth-footer a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.3s ease;
+}
+
+.auth-footer a:hover {
+    color: #5568d3;
+}
+
+/* Divider */
+.auth-divider {
+    text-align: center;
+    margin: 2rem 0;
+    position: relative;
+}
+
+.auth-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: #e0e0e0;
+}
+
+.auth-divider span {
+    background-color: white;
+    padding: 0 1rem;
+    color: #999;
+    position: relative;
+    z-index: 1;
+}
+
+/* Social Auth */
+.social-auth {
+    text-align: center;
+}
+
+.btn-social {
+    width: 100%;
+    padding: 0.9rem;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    background-color: white;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.8rem;
+    transition: all 0.3s ease;
+    margin-bottom: 0.5rem;
+}
+
+.btn-social:not(:disabled):hover {
+    background-color: #f8f9fa;
+    border-color: #667eea;
+}
+
+.btn-social:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-social span {
+    font-size: 1.3rem;
+}
+
+.social-note {
+    color: #999;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* Error Page */
+.error-section {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1rem;
+    /* UPDATED */
+    background: linear-gradient(135deg, #F9F8F6 0%, #EFE9E3 100%);
+}
+
+.error-container {
+    text-align: center;
+    max-width: 600px;
+}
+
+.error-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+    /* UPDATED */
+    color: #e74c3c;
+}
+
+.error-container h1 {
+    font-size: 2.5rem;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.error-container p {
+    font-size: 1.2rem;
+    color: #7f8c8d;
+    margin-bottom: 2rem;
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-error {
+    padding: 0.9rem 2rem;
+    border-radius: 10px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-error.primary {
+    background-color: #667eea;
+    color: white;
+}
+
+.btn-error.primary:hover {
+    background-color: #5568d3;
+    transform: translateY(-2px);
+}
+
+.btn-error.secondary {
+    background-color: #e0e0e0;
+    color: #333;
+}
+
+.btn-error.secondary:hover {
+    background-color: #d0d0d0;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .auth-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .auth-header h1 {
+        font-size: 1.6rem;
+    }
+
+    .form-options {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .error-container h1 {
+        font-size: 1.8rem;
+    }
+
+    .error-actions {
+        flex-direction: column;
+    }
+
+    .btn-error {
+        width: 100%;
+    }
+}
+

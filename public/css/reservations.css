@@ -1,0 +1,112 @@
+.reservation-container {
+    max-width: 500px;
+    margin: 40px auto;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    padding: 30px 25px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Heading */
+.reservation-container h1 {
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    color: #2c3e50;
+    user-select: none;
+}
+
+/* Error & Success Messages */
+.error-message, .success-message {
+    padding: 12px 15px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    user-select: none;
+}
+
+.error-message {
+    color: #e74c3c;
+    background-color: #fdecea;
+    border: 1px solid #f5c6cb;
+}
+
+.success-message {
+    color: #27ae60;
+    background-color: #eafaf1;
+    border: 1px solid #a6d8a8;
+}
+
+/* Form Styles */
+.reservation-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Form Labels */
+.reservation-form label {
+    font-weight: 600;
+    color: #34495e;
+    user-select: none;
+}
+
+/* Input Fields */
+.reservation-form input[type="text"],
+.reservation-form input[type="email"],
+.reservation-form input[type="tel"],
+.reservation-form input[type="date"],
+.reservation-form input[type="time"],
+.reservation-form select,
+.reservation-form textarea {
+    padding: 10px 12px;
+    border: 1.8px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.25s ease;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.reservation-form input:focus,
+.reservation-form select:focus,
+.reservation-form textarea:focus {
+    border-color: #2980b9;
+    outline: none;
+    box-shadow: 0 0 4px rgba(41, 128, 185, 0.3);
+}
+
+/* Textarea */
+.reservation-form textarea {
+    min-height: 80px;
+    font-family: inherit;
+}
+
+/* Submit Button */
+.btn-submit {
+    padding: 12px 0;
+    background-color: #2980b9;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-submit:hover {
+    background-color: #1f6391;
+}
+
+/* Responsive */
+@media (max-width: 550px) {
+    .reservation-container {
+        margin: 20px;
+        padding: 20px 15px;
+    }
+}

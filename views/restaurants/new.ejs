@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Restaurant - QuickSEAT</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/auth.css">
+    <style>
+        /* Your existing styles */
+        .image-preview-container { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .image-preview { position: relative; width: 100px; height: 100px; border: 2px dashed #ccc; border-radius: 8px; overflow: hidden; background: #f9f9f9; cursor: move; transition: all 0.2s; }
+        .image-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .remove-image { position: absolute; top: 2px; right: 2px; background: rgba(0,0,0,0.7); color: white; border: none; width: 20px; height: 20px; border-radius: 50%; font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+        .drag-over { border-color: #007bff; background: #e7f3ff; transform: scale(1.05); }
+        .gallery-help { font-size: 0.85rem; color: #666; margin-top: 5px; }
+        .form-group label span.required { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <%- include('../includes/navbar') %>
+
+    <section class="form-section auth-section">
+        <div class="container auth-container">
+            <% if (locals.error) { %>
+                <div class="alert alert-error"><%= locals.error %></div>
+            <% } %>
+            <% if (locals.success) { %>
+                <div class="alert alert-success"><%= locals.success %></div>
+            <% } %>
+
+            <div class="form-wrapper auth-card">
+                <h2 class="form-title auth-header">Add Your Restaurant to QuickSEAT</h2>
+                <p class="form-subtitle">Fill in the details to register your restaurant and set up manager access.</p>
+
+                <form action="/restaurants/add" method="POST" class="restaurant-form auth-form" enctype="multipart/form-data" id="restaurantForm">
+                    
+                    <!-- Restaurant Details -->
+                    <h3 style="margin-top: 15px;">Restaurant Details</h3>
+
+                    <div class="form-group">
+                        <label for="name">Restaurant Name <span class="required">*</span></label>
+                        <input type="text" id="name" name="name" placeholder="e.g., Spice Garden" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">Address <span class="required">*</span></label>
+                        <input type="text" id="address" name="address" placeholder="e.g., MG Road, Bhilai" required>
+                    </div>
+
+                    <!-- New Google Maps URL Field -->
+                    <div class="form-group">
+                        <label for="googleMapsUrl">Google Maps Location URL <span class="required">*</span></label>
+                        <input type="url" id="googleMapsUrl" name="googleMapsUrl" placeholder="e.g., https://maps.google.com/?q=your+location" required>
+                        <small class="form-help">Paste the shareable Google Maps URL for your restaurant location (make it clickable in emails).</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="totalTables">Total Tables <span class="required">*</span></label>
+                        <input type="number" id="totalTables" name="totalTables" placeholder="e.g., 15" min="1" max="100" required>
+                        <small class="form-help">Number of tables available in the restaurant</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="maxPartySize">Maximum Party Size <span class="required">*</span></label>
+                        <input type="number" id="maxPartySize" name="maxPartySize" placeholder="e.g., 8" min="1" max="50" required>
+                        <small class="form-help">Maximum number of guests per table</small>
+                    </div>
+
+                    <!-- Main Image -->
+                    <div class="form-group">
+                        <label for="mainImage">Main Image (Landing Page) <span class="required">*</span></label>
+                        <input type="file" id="mainImage" name="mainImage" accept="image/*" required>
+                        <small class="form-help">Shown on the restaurant listing page.</small>
+                        <div class="image-preview-container" id="mainImagePreview"></div>
+                    </div>
+
+                    <!-- Gallery Images -->
+                    <div class="form-group">
+                        <label for="galleryImages">Gallery Images (Max 5)</label>
+                        <input type="file" id="galleryInput" name="galleryImages" accept="image/*" multiple>
+                        <small class="gallery-help">Upload up to 5 images. Drag to reorder.</small>
+                        <div class="image-preview-container" id="galleryPreview"></div>
+                    </div>
+
+                    <hr style="margin: 25px 0;">
+
+                    <!-- Manager Login -->
+                    <h3 style="margin-bottom: 10px;">Manager Login</h3>
+                    <p class="form-help">Create the unique ID and password for your dashboard access.</p>
+
+                    <div class="form-group">
+                        <label for="restaurantId">Restaurant ID (Login Username) <span class="required">*</span></label>
+                        <input type="text" id="restaurantId" name="restaurantId" placeholder="e.g., PIZZA001 (must be unique)" required>
+                    </div>
+
+                    <!-- EMAIL (No OTP) -->
+                    <div class="form-group">
+                        <label for="email">Restaurant Email <span class="required">*</span></label>
+                        <input type="email" id="email" name="email" placeholder="e.g., contact@yourrestaurant.com" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="restaurantPassword">Dashboard Password <span class="required">*</span></label>
+                        <input type="password" id="restaurantPassword" name="restaurantPassword" minlength="6" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" id="submitBtn" class="btn-primary">Add Restaurant & Go to Dashboard</button>
+                        <a href="/restaurants" class="btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <%- include('../includes/footer') %>
+
+    <script>
+        // Fixed: Log form data without preventing default submission
+        document.getElementById('restaurantForm').addEventListener('submit', function(e) {
+            const formData = new FormData(this);
+            console.log('Form submitting with data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key, value);
+            }
+            // No e.preventDefault() - allows normal form submission
+            // No manual this.submit() needed
+        });
+    </script>
+</body>
+</html>

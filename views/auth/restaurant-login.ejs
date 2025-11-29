@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Manager Login - QuickSEAT</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/auth.css">
+</head>
+<body>
+    <%- include('../includes/navbar') %>
+
+    <section class="auth-section">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h1>Restaurant Manager Login</h1>
+                    <p>Use your dedicated Restaurant ID and Password to access the dashboard.</p>
+                </div>
+
+                <!-- Flash/Error Messages -->
+                <% if (typeof error !== 'undefined' && error) { %>
+                    <div class="alert alert-error"><%= error %></div>
+                <% } %>
+                <% if (typeof success !== 'undefined' && success) { %>
+                    <div class="alert alert-success"><%= success %></div>
+                <% } %>
+
+                <!-- Restaurant Login Form -->
+                <form action="/login/restaurant" method="POST" class="auth-form">
+
+                    <div class="form-group">
+                        <label for="restaurantId">Restaurant ID <span class="required">*</span></label>
+                        <input 
+                            type="text" 
+                            id="restaurantId" 
+                            name="restaurantId" 
+                            placeholder="e.g., PIZZA001" 
+                            required
+                            autofocus
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Dashboard Password <span class="required">*</span></label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="Enter dashboard password"
+                            required
+                        >
+                    </div>
+
+                    <button type="submit" class="btn-auth">
+                        Login to Dashboard 🍴
+                    </button>
+                </form>
+
+                <div class="auth-footer">
+                    <p>
+                        Are you a customer? <a href="/login/user">Login here</a>
+                    </p>
+                    <p>
+                        Need to add a new restaurant? Please <a href="/login">login as user first</a>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <%- include('../includes/footer') %>
+</body>
+</html>
