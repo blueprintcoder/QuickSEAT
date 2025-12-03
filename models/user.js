@@ -1,14 +1,11 @@
-// models/User.js - UPDATED WITH AUTHENTICATION SUPPORT
-
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 
-// models/User.js
 const userSchema = new Schema(
   {
     fullName: {
       type: String,
-      required: [false], // ← Change to false or remove required
+      required: false,
       trim: true,
     },
     username: {
@@ -27,24 +24,26 @@ const userSchema = new Schema(
       match: [/^\S+@\S+\.\S+$/, "Please provide a valid email address"],
     },
     password: {
-    type: String,
-    sparse: true  // Optional - only required for password login
-},
-passwordSetAt: Date,
-authMethod: {
-    type: String,
-    enum: ['google', 'email-password', 'both'],
-    default: 'email-password'
-},
-isNewUser: {
-    type: Boolean,
-    default: true  // Mark as new on creation
-},
-
-
+      type: String,
+      sparse: true,  // Optional - not all users have it initially
+    },
+    passwordSetAt: Date,
+    
+    authMethod: {
+      type: String,
+      enum: ['google', 'email-password', 'both'],
+      default: 'email-password'
+    },
+    
+    // ✅ KEY FIELD: Tracks if user is NEW or EXISTING
+    isNewUser: {
+      type: Boolean,
+      default: true,
+    },
+    
     phone: { 
-    type: String, 
-    required: function() { return !this.googleId; }  // Only required if NOT Google user
+      type: String,
+      sparse: true,
     },
     role: {
       type: String,
@@ -61,7 +60,30 @@ isNewUser: {
     },
     otp: { type: String },
     otpExpires: { type: Date },
-    googleId: { type: String, unique: true, sparse: true },
+    
+    googleId: { 
+      type: String, 
+      unique: true, 
+      sparse: true 
+    },
+    resetToken: {
+      type: String,
+      sparse: true
+    },
+    resetTokenExpiry: Date,
+    
+    // Security Questions (for backup/fallback)
+    securityQuestions: [{
+      question: String,
+      answer: String  // Hashed answer
+    }],
+    
+    // Failed password reset attempts tracking
+    passwordResetAttempts: {
+      type: Number,
+      default: 0
+    },
+    passwordResetBlockedUntil: Date,
   },
   {
     timestamps: true,

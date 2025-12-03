@@ -793,6 +793,77 @@
           }
         });
       }
+
+      // ========================================
+// CHECK MODAL STATUS ON PAGE LOAD
+// ========================================
+async function checkAndShowPasswordModal() {
+    try {
+        const res = await fetch('/auth/user-status');
+        const data = await res.json();
+
+        console.log('User Status:', data);
+
+        if (data.authenticated) {
+            // Scenarios:
+            // A1: showPasswordModal = true  → Show modal
+            // A2: showPasswordModal = false → No modal
+            // B1: showPasswordModal = false → No modal
+            // B2: showPasswordModal = false → No modal
+
+            if (data.showPasswordModal) {
+                // ✅ A1 SCENARIO: New Google user - Show modal
+                const modal = document.getElementById('password-modal');
+                if (modal) {
+                    modal.classList.add('show');
+                    console.log('Showing password modal for new Google user');
+                }
+            } else {
+                // ✅ A2, B1, B2 SCENARIOS: No modal needed
+                console.log('No modal needed - user: ' + data.user.email);
+            }
+        }
+    } catch (err) {
+        console.error('Error checking password status:', err);
+    }
+}
+
+// Check on page load
+window.addEventListener('load', checkAndShowPasswordModal);
+
+    // Hamburger Menu Toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    // Toggle menu on button click
+    if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', function() {
+            mobileMenuBtn.classList.toggle('active');
+            mobileMenu.classList.toggle('active');
+        });
+    }
+
+    // Close menu when a link is clicked
+    const mobileMenuLinks = mobileMenu ? mobileMenu.querySelectorAll('a') : [];
+    mobileMenuLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            mobileMenuBtn.classList.remove('active');
+            mobileMenu.classList.remove('active');
+        });
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', function(event) {
+        if (mobileMenuBtn && mobileMenu) {
+            const isClickInsideNav = mobileMenuBtn.contains(event.target);
+            const isClickInsideMenu = mobileMenu.contains(event.target);
+            
+            if (!isClickInsideNav && !isClickInsideMenu) {
+                mobileMenuBtn.classList.remove('active');
+                mobileMenu.classList.remove('active');
+            }
+        }
+    });
     </script>
   </body>
 </html>

@@ -174,11 +174,81 @@ const sendRestaurantConfirmation = (restaurantEmail, restaurant) => {
     return transporter.sendMail(mailOptions);
 };
 
+// ========================
+// PASSWORD RESET EMAILS ✅ NEW
+// ========================
+
+// Password Reset Email (with JWT token link)
+const sendPasswordResetEmail = (userEmail, resetToken, userName) => {
+    const resetLink = `${process.env.APP_BASE_URL || 'http://localhost:8080'}/auth/reset-password/${resetToken}`;
+    
+    const mailOptions = {
+        from: '"QuickSEAT" <quickseatofficial@gmail.com>',
+        to: userEmail,
+        subject: '🔐 Reset Your Password - QuickSEAT',
+        html: `
+            <h2>Password Reset Request</h2>
+            <p>Hi <strong>${userName}</strong>,</p>
+            <p>We received a request to reset your password. Click the button below to proceed:</p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetLink}" style="background: #667eea; color: white; padding: 14px 40px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold; font-size: 16px;">
+                    🔐 Reset Password
+                </a>
+            </div>
+            
+            <p>Or copy this link in your browser:</p>
+            <p style="word-break: break-all; color: #666; font-size: 14px;">
+                <a href="${resetLink}">${resetLink}</a>
+            </p>
+            
+            <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107;">
+                <p style="margin: 0; color: #856404;"><strong>⏰ This link expires in 30 minutes</strong></p>
+            </div>
+            
+            <p>If you didn't request this, please ignore this email or contact support.</p>
+            
+            <p>Best regards,<br><strong>QuickSEAT Team</strong></p>
+        `
+    };
+    
+    return transporter.sendMail(mailOptions);
+};
+
+// Password Reset Success Confirmation
+const sendPasswordResetConfirmation = (userEmail, userName) => {
+    const mailOptions = {
+        from: '"QuickSEAT" <quickseatofficial@gmail.com>',
+        to: userEmail,
+        subject: '✅ Your Password Has Been Reset - QuickSEAT',
+        html: `
+            <h2>Password Reset Successful</h2>
+            <p>Hi <strong>${userName}</strong>,</p>
+            <p>Your password has been successfully reset! 🎉</p>
+            
+            <p>You can now log in with your new password:</p>
+            <p><a href="${process.env.APP_BASE_URL || 'http://localhost:8080'}/login/user" style="background: #27ae60; color: white; padding: 12px 30px; text-decoration: none; border-radius: 8px; display: inline-block; font-weight: bold;">
+                🔓 Login Now
+            </a></p>
+            
+            <div style="background: #d4edda; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745;">
+                <p style="margin: 0; color: #155724;"><strong>💡 Tip:</strong> Keep your password safe and don't share it with anyone.</p>
+            </div>
+            
+            <p>Best regards,<br><strong>QuickSEAT Team</strong></p>
+        `
+    };
+    
+    return transporter.sendMail(mailOptions);
+};
+
 module.exports = {
     transporter,
     sendNewBookingNotification,
     sendBookingApprovedNotification,
     sendBookingDeclinedNotification,
     sendBookingCancelledNotification,
-    sendRestaurantConfirmation
+    sendRestaurantConfirmation,
+    sendPasswordResetEmail,           // ✅ NEW
+    sendPasswordResetConfirmation     // ✅ NEW
 };

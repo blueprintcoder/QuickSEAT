@@ -7,6 +7,8 @@ const methodOverride = require("method-override");
 const session = require("express-session");
 const MongoStore = require("connect-mongo");
 const passport = require("passport");
+const flash = require("express-flash");
+const cookieParser = require("cookie-parser");
 const connectDB = require("./init/db");
 const Restaurant = require("./models/restaurant");
 const restaurantRoutes = require("./routes/restaurantRoutes");
@@ -25,7 +27,7 @@ const PORT = 8080;
 // CREATE HTTP SERVER
 const server = http.createServer(app);
 
-// TO THIS:
+// SOCKET.IO
 const io = new Server(server, {
   cors: {
     origin: "*",
@@ -33,17 +35,24 @@ const io = new Server(server, {
   },
 });
 
-// MIDDLEWARE
+// ==================== MIDDLEWARE (CORRECT ORDER) ====================
+
+// 1. Body Parser
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
-app.use(methodOverride("_method"));
 
-// STATIC FOLDERS
+// 2. Static Files
+app.use(express.static(path.join(__dirname, "public")));
 app.use("/images", express.static("public/images"));
 app.use("/uploads", express.static("uploads"));
 
-// SESSION
+// 3. Method Override
+app.use(methodOverride("_method"));
+
+// 4. Cookie Parser (MUST come before session)
+app.use(cookieParser());
+
+// 5. Session (MUST come before flash)
 app.use(
   session({
     secret: "supersecret",
@@ -53,29 +62,37 @@ app.use(
   })
 );
 
-// PASSPORT
+// 6. Flash Messages (MUST come after session)
+app.use(flash());
+
+// 7. Passport
 require("./config/passport")(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
-// GLOBAL LOCALS
+// ==================== VIEWS ====================
+
+app.set("view engine", "ejs");
+app.set("views", path.join(__dirname, "views"));
+
+// ==================== MAKE SOCKET.IO AVAILABLE ====================
+
+app.set("io", io);
+
+// ==================== GLOBAL LOCALS ====================
+
 app.use((req, res, next) => {
   res.locals.currentUser = req.user;
   res.locals.success = req.session.success;
   res.locals.error = req.session.error;
+  res.locals.messages = req.flash(); // Add this for flash messages
   delete req.session.success;
   delete req.session.error;
   next();
 });
 
-// MAKE SOCKET.IO AVAILABLE TO ROUTES
-app.set("io", io);
+// ==================== HOME PAGE ROUTE ====================
 
-// VIEWS
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
-
-// ✅ HOME PAGE ROUTE (fix for "Cannot GET /")
 app.get("/", async (req, res) => {
   try {
     const restaurants = await Restaurant.find({});
@@ -86,35 +103,42 @@ app.get("/", async (req, res) => {
   }
 });
 
-// ROUTES
+// ==================== AUTH ROUTES ====================
+
 app.use("/", authRoutes);
 app.use("/api/otp", require("./routes/otpRoutes"));
-app.use("/", reservationRoutes);
-app.use("/", calendarRoutes);
-app.use("/areas", areaRoutes);
-app.use("/restaurants", require("./routes/restaurantRoutes"));
-app.use("/restaurant-dashboard", require("./routes/dashboardRoutes"));
-app.use("/reservations", require("./routes/reservationRoutes"));
-app.use('/bookings', require("./routes/reservationRoutes")); 
 
-// ✅ GOOGLE OAUTH ROUTES - ADD HERE
-app.get('/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
+// ==================== GOOGLE OAUTH ====================
+
+app.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-app.get('/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login' }),
+app.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/login" }),
   (req, res) => {
-    // Successful authentication
-    res.redirect('/');
+    res.redirect("/");
   }
 );
 
-// CORRECT VERSION - Only ONE connection handler
+// ==================== OTHER ROUTES ====================
+
+app.use("/", reservationRoutes);
+app.use("/", calendarRoutes);
+app.use("/areas", areaRoutes);
+app.use("/restaurants", restaurantRoutes);
+app.use("/restaurant-dashboard", require("./routes/dashboardRoutes"));
+app.use("/reservations", reservationRoutes);
+app.use("/bookings", require("./routes/reservationRoutes"));
+app.use("/tables", tableRoutes);
+
+// ==================== SOCKET.IO CONNECTION ====================
+
 io.on("connection", (socket) => {
   console.log("✅ New client connected:", socket.id);
 
-  // In your socket connection handler
   socket.on("joinRestaurant", (restaurantId) => {
     socket.join(`restaurant_${restaurantId}`);
     console.log(
@@ -122,7 +146,6 @@ io.on("connection", (socket) => {
     );
   });
 
-  // ✅ NEW: Join customer-specific room
   socket.on("joinCustomer", (customerId) => {
     socket.join(`customer_${customerId}`);
     console.log(`✅ Socket ${socket.id} joined room: customer_${customerId}`);
@@ -133,18 +156,8 @@ io.on("connection", (socket) => {
   });
 });
 
-// app.js or server.js
+// ==================== START SERVER ====================
 
-// Add this line BEFORE other routes
-app.use("/tables", tableRoutes);
-
-// Example: If your other routes are like:
-app.use("/reservations", reservationRoutes);
-app.use("/restaurants", restaurantRoutes);
-
-// Add above them or below, doesn't matter as long as it's before app.listen()
-
-// DB + SERVER
 connectDB(MONGO_URI).then(() => {
   server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 });
