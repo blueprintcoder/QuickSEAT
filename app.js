@@ -21,8 +21,8 @@ const http = require("http");
 const { Server } = require("socket.io");
 
 // CONFIG
-const MONGO_URI = "mongodb://127.0.0.1:27017/Quickseat";
-const PORT = 8080;
+const DB_URL = process.env.DB_URL || "mongodb://127.0.0.1:27017/Quickseat";
+const PORT = process.env.PORT || 8080;
 
 // CREATE HTTP SERVER
 const server = http.createServer(app);
@@ -55,10 +55,10 @@ app.use(cookieParser());
 // 5. Session (MUST come before flash)
 app.use(
   session({
-    secret: "supersecret",
+    secret: process.env.SESSION_SECRET || "supersecret",
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({ mongoUrl: MONGO_URI }),
+    store: MongoStore.create({ mongoUrl: DB_URL }),
   })
 );
 
@@ -158,6 +158,6 @@ io.on("connection", (socket) => {
 
 // ==================== START SERVER ====================
 
-connectDB(MONGO_URI).then(() => {
+connectDB(DB_URL).then(() => {
   server.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
 });
