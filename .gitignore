@@ -21,7 +21,6 @@ coverage/
 
 # User uploads (store on cloud, not Git)
 public/uploads/
-public/videos/  # If these are large/user-generated
 
 # IDE/editor files
 .vscode/
