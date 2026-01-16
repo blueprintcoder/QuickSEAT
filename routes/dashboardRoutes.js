@@ -146,7 +146,7 @@ router.get(
 router.get("/floorplan", (req, res) => {
   try {
     const restaurant = { _id: req.session.restaurantId };
-    res.render("floorplan", {
+    res.render("floorPlan", {
       restaurant: restaurant,
       pageTitle: "Floor Plan - QuickSEAT",
     });
