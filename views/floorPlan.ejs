@@ -1,16 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Floor Plan - <%= pageTitle %></title>
-    <link rel="stylesheet" href="/css/floorPlan.css"> 
+    <link rel="stylesheet" href="/css/floorPlan.css" />
     <script src="/socket.io/socket.io.js"></script>
-</head> 
-<body>
-
-<div class="dashboard-layout">
-    <aside class="sidebar">
+  </head>
+  <body>
+    <div class="dashboard-layout">
+      <aside class="sidebar">
         <div class="logo">QuickSEAT</div>
 
         <nav>
@@ -30,7 +29,10 @@
           <a
             href="/logout"
             class="btn-logout"
-            onclick="event.preventDefault(); document.getElementById('logout-restaurant-form').submit();"
+            onclick="
+              event.preventDefault();
+              document.getElementById('logout-restaurant-form').submit();
+            "
             >Logout</a
           >
           <form
@@ -42,276 +44,342 @@
         </div>
       </aside>
 
-    <main class="main-content">
+      <main class="main-content">
         <div class="header">
-            <h1>🏢 Floor Plan Manager</h1>
+          <h1>🏢 Floor Plan Manager</h1>
         </div>
 
         <div class="toolbar">
-            <div class="area-tabs" id="areaTabs"></div>
-            <button class="btn btn-info" id="addAreaBtn">➕ Add Area/Space</button>
-            <button class="btn btn-success" id="addTableBtn">➕ Add Table</button>
-            <button class="btn" id="refreshBtn">🔄 Refresh</button>
-            <button class="btn-info" id="selectAllBtn">Select All</button>
-            <button class="btn-info" id="bulkAddBtn">Add Multiple Tables</button>
+          <div class="area-tabs" id="areaTabs"></div>
+          <button class="btn btn-info" id="addAreaBtn">
+            ➕ Add Area/Space
+          </button>
+          <button class="btn btn-success" id="addTableBtn">➕ Add Table</button>
+          <button class="btn" id="refreshBtn">🔄 Refresh</button>
+          <button class="btn-info" id="selectAllBtn">Select All</button>
+          <button class="btn-info" id="bulkAddBtn">Add Multiple Tables</button>
 
-
-            <div class="zoom-controls">
-                <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out">🔍−</button>
-                <div class="zoom-level" id="zoomLevel">100%</div>
-                <button class="zoom-btn" id="zoomInBtn" title="Zoom In">🔍+</button>
-                <button class="zoom-btn" id="resetZoomBtn" title="Reset">⟲</button>
-            </div>
+          <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomOutBtn" title="Zoom Out">
+              🔍−
+            </button>
+            <div class="zoom-level" id="zoomLevel">100%</div>
+            <button class="zoom-btn" id="zoomInBtn" title="Zoom In">🔍+</button>
+            <button class="zoom-btn" id="resetZoomBtn" title="Reset">⟲</button>
+          </div>
         </div>
 
         <div class="content-wrapper">
-            <div class="floor-plan-wrapper" id="floorPlanWrapper">
-                <div class="floor-plan" id="floorPlan"></div>
-            </div>
+          <div class="floor-plan-wrapper" id="floorPlanWrapper">
+            <div class="floor-plan" id="floorPlan"></div>
+          </div>
 
-            <div class="side-panel">
-                <div class="panel-title">📊 Statistics</div>
-                <div class="stat-card">
-                    <div class="stat-label">Total Tables</div>
-                    <div class="stat-number" id="totalTables">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">🟢 Available</div>
-                    <div class="stat-number" id="availableCount">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">🔴 Occupied</div>
-                    <div class="stat-number" id="occupiedCount">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">🟠 Reserved</div>
-                    <div class="stat-number" id="reservedCount">0</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">🧹 Cleaning</div>
-                    <div class="stat-number" id="cleaningCount">0</div>
-                </div>
+          <div class="side-panel">
+            <div class="panel-title">📊 Statistics</div>
+            <div class="stat-card">
+              <div class="stat-label">Total Tables</div>
+              <div class="stat-number" id="totalTables">0</div>
             </div>
+            <div class="stat-card">
+              <div class="stat-label">🟢 Available</div>
+              <div class="stat-number" id="availableCount">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">🔴 Occupied</div>
+              <div class="stat-number" id="occupiedCount">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">🟠 Reserved</div>
+              <div class="stat-number" id="reservedCount">0</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">🧹 Cleaning</div>
+              <div class="stat-number" id="cleaningCount">0</div>
+            </div>
+          </div>
         </div>
-    </main>
-</div>
+      </main>
+    </div>
 
-<!-- ADD AREA MODAL -->
-<div class="modal-overlay" id="areaModal">
-    <div class="modal-content">
+    <!-- ADD AREA MODAL -->
+    <div class="modal-overlay" id="areaModal">
+      <div class="modal-content">
         <button class="modal-close" id="areaModalClose">&times;</button>
         <div class="modal-header">
-            <h2>➕ Add New Area/Space</h2>
+          <h2>➕ Add New Area/Space</h2>
         </div>
 
         <div class="form-row">
-            <div class="form-group">
-                <label>Area Name * (e.g., 2nd Floor, Bar, Rooftop)</label>
-                <input type="text" id="areaName" placeholder="e.g., Bar, Rooftop" required>
-            </div>
-            <div class="form-group">
-                <label>Icon (Emoji)</label>
-                <input type="text" id="areaIcon" placeholder="e.g., 🍺" value="🏢" maxlength="2">
-            </div>
+          <div class="form-group">
+            <label>Area Name * (e.g., 2nd Floor, Bar, Rooftop)</label>
+            <input
+              type="text"
+              id="areaName"
+              placeholder="e.g., Bar, Rooftop"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Icon (Emoji)</label>
+            <input
+              type="text"
+              id="areaIcon"
+              placeholder="e.g., 🍺"
+              value="🏢"
+              maxlength="2"
+            />
+          </div>
         </div>
 
         <div class="form-group">
-            <label>Description</label>
-            <input type="text" id="areaDescription" placeholder="e.g., Second floor seating">
+          <label>Description</label>
+          <input
+            type="text"
+            id="areaDescription"
+            placeholder="e.g., Second floor seating"
+          />
         </div>
 
         <div class="form-actions">
-            <button type="button" class="btn-submit" id="saveAreaBtn">Create Area</button>
-            <button type="button" class="btn-cancel" id="cancelAreaBtn">Cancel</button>
+          <button type="button" class="btn-submit" id="saveAreaBtn">
+            Create Area
+          </button>
+          <button type="button" class="btn-cancel" id="cancelAreaBtn">
+            Cancel
+          </button>
         </div>
+      </div>
     </div>
-</div>
 
-<!-- ADD/EDIT TABLE MODAL -->
-<div class="modal-overlay" id="tableModal">
-    <div class="modal-content">
+    <!-- ADD/EDIT TABLE MODAL -->
+    <div class="modal-overlay" id="tableModal">
+      <div class="modal-content">
         <button class="modal-close" id="tableModalClose">&times;</button>
         <div class="modal-header">
-            <h2 id="modalTitle">Add Table</h2>
+          <h2 id="modalTitle">Add Table</h2>
         </div>
 
         <div class="form-row">
-            <div class="form-group">
-                <label>Table Number *</label>
-                <input type="text" id="tableNumber" placeholder="e.g., T1" required>
-            </div>
-            <div class="form-group">
-                <label>Capacity *</label>
-                <input type="number" id="capacity" min="1" max="20" value="4" required>
-            </div>
+          <div class="form-group">
+            <label>Table Number *</label>
+            <input
+              type="text"
+              id="tableNumber"
+              placeholder="e.g., T1"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Capacity *</label>
+            <input
+              type="number"
+              id="capacity"
+              min="1"
+              max="20"
+              value="4"
+              required
+            />
+          </div>
         </div>
 
         <div class="form-row">
-            <div class="form-group">
-                <label>Table Shape *</label>
-                <select id="tableShape" required>
-                    <option value="round">🔴 Round</option>
-                    <option value="square">🟩 Square</option>
-                    <option value="rect">▭ Rectangle</option>
-                    <option value="booth">🪑 Booth</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Table Status *</label>
-                <select id="tableStatus" required>
-                    <option value="available">✅ Available</option>
-                    <option value="occupied">🔴 Occupied</option>
-                    <option value="reserved">🟠 Reserved</option>
-                    <option value="cleaning">🧹 Cleaning</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>Area/Space *</label>
-            <select id="areaSelect" required>
-                <option value="">-- Select Area --</option>
+          <div class="form-group">
+            <label>Table Shape *</label>
+            <select id="tableShape" required>
+              <option value="round">🔴 Round</option>
+              <option value="square">🟩 Square</option>
+              <option value="rect">▭ Rectangle</option>
+              <option value="booth">🪑 Booth</option>
             </select>
+          </div>
+          <div class="form-group">
+            <label>Table Status *</label>
+            <select id="tableStatus" required>
+              <option value="available">✅ Available</option>
+              <option value="occupied">🔴 Occupied</option>
+              <option value="reserved">🟠 Reserved</option>
+              <option value="cleaning">🧹 Cleaning</option>
+            </select>
+          </div>
         </div>
 
         <div class="form-group">
-            <label>Assigned Server</label>
-            <input type="text" id="assignedServer" placeholder="Server name">
+          <label>Area/Space *</label>
+          <select id="areaSelect" required>
+            <option value="">-- Select Area --</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Assigned Server</label>
+          <input type="text" id="assignedServer" placeholder="Server name" />
         </div>
 
         <div class="form-actions">
-            <button type="button" class="btn-submit" id="saveTableBtn">Save Table</button>
-            <button type="button" class="btn-cancel" id="tableModalCancelBtn">Cancel</button>
+          <button type="button" class="btn-submit" id="saveTableBtn">
+            Save Table
+          </button>
+          <button type="button" class="btn-cancel" id="tableModalCancelBtn">
+            Cancel
+          </button>
         </div>
-    </div>
-</div>
-
-<!-- Bulk Add Tables Modal -->
-<div class="modal-overlay" id="bulkAddModal">
-  <div class="modal-content">
-    <button class="modal-close" id="bulkAddModalClose">&times;</button>
-    <div class="modal-header">
-      <h2>Add Multiple Tables</h2>
-    </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Starting Table Number *</label>
-        <input type="text" id="bulkStartNumber" placeholder="e.g., T10" required />
-      </div>
-      <div class="form-group">
-        <label>Number of Tables *</label>
-        <input type="number" id="bulkNumber" min="1" max="100" value="10" required />
       </div>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Table Shape *</label>
-        <select id="bulkShape" required>
-          <option value="round">Round</option>
-          <option value="square">Square</option>
-          <option value="rect">Rectangle</option>
-          <option value="booth">Booth</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Area/Space *</label>
-        <select id="bulkAreaSelect" required></select>
+
+    <!-- Bulk Add Tables Modal -->
+    <div class="modal-overlay" id="bulkAddModal">
+      <div class="modal-content">
+        <button class="modal-close" id="bulkAddModalClose">&times;</button>
+        <div class="modal-header">
+          <h2>Add Multiple Tables</h2>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Starting Table Number *</label>
+            <input
+              type="text"
+              id="bulkStartNumber"
+              placeholder="e.g., T10"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label>Number of Tables *</label>
+            <input
+              type="number"
+              id="bulkNumber"
+              min="1"
+              max="100"
+              value="10"
+              required
+            />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Table Shape *</label>
+            <select id="bulkShape" required>
+              <option value="round">Round</option>
+              <option value="square">Square</option>
+              <option value="rect">Rectangle</option>
+              <option value="booth">Booth</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Area/Space *</label>
+            <select id="bulkAreaSelect" required></select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="button" class="btn-submit" id="saveBulkAddBtn">
+            Add Tables
+          </button>
+          <button type="button" class="btn-cancel" id="cancelBulkAddBtn">
+            Cancel
+          </button>
+        </div>
       </div>
     </div>
-    <div class="form-actions">
-      <button type="button" class="btn-submit" id="saveBulkAddBtn">Add Tables</button>
-      <button type="button" class="btn-cancel" id="cancelBulkAddBtn">Cancel</button>
-    </div>
-  </div>
-</div>
 
+    <script>
+      const socket = io();
+      const restaurantId = "<%= restaurant._id %>";
 
-<script>
-    const socket = io();
-    const restaurantId = '<%= restaurant._id %>';
-    
-    let allAreas = [];
-    let allTables = [];
-    let currentArea = null;
-    let editingTableId = null;
-    let draggedElement = null;
-    
-    // ZOOM STATE - ONLY FOR CANVAS
-    let zoomLevel = 1;
-    let selectedTables = new Set();
+      let allAreas = [];
+      let allTables = [];
+      let currentArea = null;
+      let editingTableId = null;
+      let draggedElement = null;
 
+      // ZOOM STATE - ONLY FOR CANVAS
+      let zoomLevel = 1;
+      let selectedTables = new Set();
 
-    async function fetchData() {
+      async function fetchData() {
         try {
-            const [areasRes, tablesRes] = await Promise.all([
-                fetch(`/areas/by-restaurant/${restaurantId}`),
-                fetch(`/tables/by-restaurant/${restaurantId}`)
-            ]);
+          const [areasRes, tablesRes] = await Promise.all([
+            fetch(`/areas/by-restaurant/${restaurantId}`),
+            fetch(`/tables/by-restaurant/${restaurantId}`),
+          ]);
 
-            if (areasRes.ok) {
-                allAreas = await areasRes.json();
-                if (allAreas.length > 0 && !currentArea) {
-                    currentArea = allAreas[0]._id;
-                }
+          if (areasRes.ok) {
+            allAreas = await areasRes.json();
+            if (allAreas.length > 0 && !currentArea) {
+              currentArea = allAreas[0]._id;
             }
+          }
 
-            if (tablesRes.ok) {
-                allTables = await tablesRes.json();
-            }
+          if (tablesRes.ok) {
+            allTables = await tablesRes.json();
+          }
 
-            renderAreaTabs();
-            renderFloorPlan();
-            updateStats();
+          renderAreaTabs();
+          renderFloorPlan();
+          updateStats();
         } catch (error) {
-            console.error('❌ Error:', error);
-            showNotification('Error loading data', 'error');
+          console.error("❌ Error:", error);
+          showNotification("Error loading data", "error");
         }
-    }
+      }
 
-    function renderAreaTabs() {
-        const areaTabs = document.getElementById('areaTabs');
-        areaTabs.innerHTML = allAreas.map(area => `
-            <button class="area-tab ${area._id === currentArea ? 'active' : ''}" data-area-id="${area._id}">
+      function renderAreaTabs() {
+        const areaTabs = document.getElementById("areaTabs");
+        areaTabs.innerHTML = allAreas
+          .map(
+            (area) => `
+            <button class="area-tab ${area._id === currentArea ? "active" : ""}" data-area-id="${area._id}">
                 ${area.areaIcon} ${area.areaName}
                 <span class="area-tab-delete" onclick="deleteArea('${area._id}')" title="Delete">✕</span>
             </button>
-        `).join('');
+        `,
+          )
+          .join("");
 
-        document.querySelectorAll('.area-tab').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                if (!e.target.classList.contains('area-tab-delete')) {
-                    document.querySelectorAll('.area-tab').forEach(b => b.classList.remove('active'));
-                    btn.classList.add('active');
-                    currentArea = btn.dataset.areaId;
-                    renderFloorPlan();
-                    updateStats();
-                    updateAreaSelectDropdown();
-                }
-            });
+        document.querySelectorAll(".area-tab").forEach((btn) => {
+          btn.addEventListener("click", (e) => {
+            if (!e.target.classList.contains("area-tab-delete")) {
+              document
+                .querySelectorAll(".area-tab")
+                .forEach((b) => b.classList.remove("active"));
+              btn.classList.add("active");
+              currentArea = btn.dataset.areaId;
+              renderFloorPlan();
+              updateStats();
+              updateAreaSelectDropdown();
+            }
+          });
         });
-    }
+      }
 
-    function updateAreaSelectDropdown() {
-        const areaSelect = document.getElementById('areaSelect');
+      function updateAreaSelectDropdown() {
+        const areaSelect = document.getElementById("areaSelect");
         if (!areaSelect) return;
-        
-        areaSelect.innerHTML = allAreas.map(area => `
-            <option value="${area._id}" ${area._id === currentArea ? 'selected' : ''}>${area.areaIcon} ${area.areaName}</option>
-        `).join('');
-    }
 
-    function renderFloorPlan() {
-        const floorPlan = document.getElementById('floorPlan');
-        const tablesInArea = currentArea ? allTables.filter(t => t.area === currentArea) : [];
+        areaSelect.innerHTML = allAreas
+          .map(
+            (area) => `
+            <option value="${area._id}" ${area._id === currentArea ? "selected" : ""}>${area.areaIcon} ${area.areaName}</option>
+        `,
+          )
+          .join("");
+      }
+
+      function renderFloorPlan() {
+        const floorPlan = document.getElementById("floorPlan");
+        const tablesInArea = currentArea
+          ? allTables.filter((t) => t.area === currentArea)
+          : [];
 
         if (tablesInArea.length === 0) {
-            floorPlan.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #999; text-align: center; font-size: 1.2rem;">No tables. Click "Add Table"</div>';
-            return;
+          floorPlan.innerHTML =
+            '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #999; text-align: center; font-size: 1.2rem;">No tables. Click "Add Table"</div>';
+          return;
         }
 
-        floorPlan.innerHTML = tablesInArea.map(table => {
-            const shape = table.tableShape || 'round';
-            const status = table.tableStatus || 'available';
+        floorPlan.innerHTML = tablesInArea
+          .map((table) => {
+            const shape = table.tableShape || "round";
+            const status = table.tableStatus || "available";
             const x = table.positionX || 0;
             const y = table.positionY || 0;
             const statusText = status.charAt(0).toUpperCase() + status.slice(1);
@@ -326,84 +394,87 @@
                     <div class="table-status-badge">${statusText}</div>
                 </div>
             `;
-        }).join('');
+          })
+          .join("");
 
         attachDragListeners();
         attachTableListeners();
-    }
+      }
 
-    function attachDragListeners() {
-        const tables = document.querySelectorAll('.table-item');
-        tables.forEach(table => {
-            table.addEventListener('dragstart', (e) => {
-                draggedElement = table;
-                table.classList.add('dragging');
-            });
+      function attachDragListeners() {
+        const tables = document.querySelectorAll(".table-item");
+        tables.forEach((table) => {
+          table.addEventListener("dragstart", (e) => {
+            draggedElement = table;
+            table.classList.add("dragging");
+          });
 
-            table.addEventListener('dragend', async () => {
-                table.classList.remove('dragging');
-                if (draggedElement) {
-                    const tableId = draggedElement.dataset.tableId;
-                    const x = parseInt(draggedElement.style.left) || 0;
-                    const y = parseInt(draggedElement.style.top) || 0;
-                    
-                    await fetch(`/tables/${tableId}/position`, {
-                        method: 'PATCH',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ positionX: x, positionY: y })
-                    });
-                }
-                draggedElement = null;
-            });
-        });
-
-        const floorPlan = document.getElementById('floorPlan');
-        floorPlan.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-        });
-
-        floorPlan.addEventListener('drop', (e) => {
-            e.preventDefault();
+          table.addEventListener("dragend", async () => {
+            table.classList.remove("dragging");
             if (draggedElement) {
-                const rect = floorPlan.getBoundingClientRect();
-                const x = Math.max(0, e.clientX - rect.left - 50);
-                const y = Math.max(0, e.clientY - rect.top - 50);
-                draggedElement.style.left = x + 'px';
-                draggedElement.style.top = y + 'px';
+              const tableId = draggedElement.dataset.tableId;
+              const x = parseInt(draggedElement.style.left) || 0;
+              const y = parseInt(draggedElement.style.top) || 0;
+
+              await fetch(`/tables/${tableId}/position`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ positionX: x, positionY: y }),
+              });
             }
+            draggedElement = null;
+          });
         });
-    }
 
-    function attachTableListeners() {
-        const tables = document.querySelectorAll('.table-item');
-        tables.forEach(table => {
-            table.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                showContextMenu(e, table.dataset.tableId);
-            });
-
-            table.addEventListener('dblclick', (e) => {
-                e.stopPropagation();
-                editTable(table.dataset.tableId);
-            });
-
-            table.addEventListener('mousedown', (e) => {
-                if (e.button === 1) {
-                    e.preventDefault();
-                    showStatusDropdown(e, table.dataset.tableId);
-                }
-            });
+        const floorPlan = document.getElementById("floorPlan");
+        floorPlan.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          e.dataTransfer.dropEffect = "move";
         });
-    }
 
-    function showContextMenu(e, tableId) {
-        document.querySelectorAll('.context-menu, .status-dropdown').forEach(m => m.remove());
+        floorPlan.addEventListener("drop", (e) => {
+          e.preventDefault();
+          if (draggedElement) {
+            const rect = floorPlan.getBoundingClientRect();
+            const x = Math.max(0, e.clientX - rect.left - 50);
+            const y = Math.max(0, e.clientY - rect.top - 50);
+            draggedElement.style.left = x + "px";
+            draggedElement.style.top = y + "px";
+          }
+        });
+      }
 
-        const menu = document.createElement('div');
-        menu.className = 'context-menu';
-        menu.style.left = e.pageX + 'px';
-        menu.style.top = e.pageY + 'px';
+      function attachTableListeners() {
+        const tables = document.querySelectorAll(".table-item");
+        tables.forEach((table) => {
+          table.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            showContextMenu(e, table.dataset.tableId);
+          });
+
+          table.addEventListener("dblclick", (e) => {
+            e.stopPropagation();
+            editTable(table.dataset.tableId);
+          });
+
+          table.addEventListener("mousedown", (e) => {
+            if (e.button === 1) {
+              e.preventDefault();
+              showStatusDropdown(e, table.dataset.tableId);
+            }
+          });
+        });
+      }
+
+      function showContextMenu(e, tableId) {
+        document
+          .querySelectorAll(".context-menu, .status-dropdown")
+          .forEach((m) => m.remove());
+
+        const menu = document.createElement("div");
+        menu.className = "context-menu";
+        menu.style.left = e.pageX + "px";
+        menu.style.top = e.pageY + "px";
         menu.innerHTML = `
             <div class="context-item" onclick="editTable('${tableId}')">✏️ Edit</div>
             <div class="context-item" onclick="showStatusDropdown2('${tableId}')">📊 Change Status</div>
@@ -412,17 +483,21 @@
         document.body.appendChild(menu);
 
         setTimeout(() => {
-            document.addEventListener('click', () => menu.remove(), { once: true });
+          document.addEventListener("click", () => menu.remove(), {
+            once: true,
+          });
         }, 10);
-    }
+      }
 
-    function showStatusDropdown(e, tableId) {
-        document.querySelectorAll('.status-dropdown, .context-menu').forEach(m => m.remove());
+      function showStatusDropdown(e, tableId) {
+        document
+          .querySelectorAll(".status-dropdown, .context-menu")
+          .forEach((m) => m.remove());
 
-        const dropdown = document.createElement('div');
-        dropdown.className = 'status-dropdown';
-        dropdown.style.left = e.pageX + 'px';
-        dropdown.style.top = e.pageY + 'px';
+        const dropdown = document.createElement("div");
+        dropdown.className = "status-dropdown";
+        dropdown.style.left = e.pageX + "px";
+        dropdown.style.top = e.pageY + "px";
         dropdown.innerHTML = `
             <div class="status-item" onclick="changeStatus('${tableId}', 'available')">✅ Available</div>
             <div class="status-item" onclick="changeStatus('${tableId}', 'occupied')">🔴 Occupied</div>
@@ -432,17 +507,21 @@
         document.body.appendChild(dropdown);
 
         setTimeout(() => {
-            document.addEventListener('click', () => dropdown.remove(), { once: true });
+          document.addEventListener("click", () => dropdown.remove(), {
+            once: true,
+          });
         }, 10);
-    }
+      }
 
-    window.showStatusDropdown2 = function(tableId) {
-        document.querySelectorAll('.status-dropdown, .context-menu').forEach(m => m.remove());
-        const dropdown = document.createElement('div');
-        dropdown.className = 'status-dropdown';
-        dropdown.style.left = '50%';
-        dropdown.style.top = '50%';
-        dropdown.style.transform = 'translate(-50%, -50%)';
+      window.showStatusDropdown2 = function (tableId) {
+        document
+          .querySelectorAll(".status-dropdown, .context-menu")
+          .forEach((m) => m.remove());
+        const dropdown = document.createElement("div");
+        dropdown.className = "status-dropdown";
+        dropdown.style.left = "50%";
+        dropdown.style.top = "50%";
+        dropdown.style.transform = "translate(-50%, -50%)";
         dropdown.innerHTML = `
             <div class="status-item" onclick="changeStatus('${tableId}', 'available')">✅ Available</div>
             <div class="status-item" onclick="changeStatus('${tableId}', 'occupied')">🔴 Occupied</div>
@@ -452,257 +531,305 @@
         document.body.appendChild(dropdown);
 
         setTimeout(() => {
-            document.addEventListener('click', () => dropdown.remove(), { once: true });
+          document.addEventListener("click", () => dropdown.remove(), {
+            once: true,
+          });
         }, 10);
-    };
+      };
 
-    window.changeStatus = async function(tableId, newStatus) {
+      window.changeStatus = async function (tableId, newStatus) {
         await fetch(`/tables/${tableId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tableStatus: newStatus })
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tableStatus: newStatus }),
         });
-        document.querySelectorAll('.status-dropdown, .context-menu').forEach(m => m.remove());
+        document
+          .querySelectorAll(".status-dropdown, .context-menu")
+          .forEach((m) => m.remove());
         fetchData();
-        showNotification(`Status: ${newStatus}`, 'success');
-    };
+        showNotification(`Status: ${newStatus}`, "success");
+      };
 
-    function updateStats() {
-        const tablesInArea = currentArea ? allTables.filter(t => t.area === currentArea) : [];
-        const available = tablesInArea.filter(t => t.tableStatus === 'available').length;
-        const occupied = tablesInArea.filter(t => t.tableStatus === 'occupied').length;
-        const reserved = tablesInArea.filter(t => t.tableStatus === 'reserved').length;
-        const cleaning = tablesInArea.filter(t => t.tableStatus === 'cleaning').length;
-        
-        document.getElementById('totalTables').textContent = tablesInArea.length;
-        document.getElementById('availableCount').textContent = available;
-        document.getElementById('occupiedCount').textContent = occupied;
-        document.getElementById('reservedCount').textContent = reserved;
-        document.getElementById('cleaningCount').textContent = cleaning;
-    }
+      function updateStats() {
+        const tablesInArea = currentArea
+          ? allTables.filter((t) => t.area === currentArea)
+          : [];
+        const available = tablesInArea.filter(
+          (t) => t.tableStatus === "available",
+        ).length;
+        const occupied = tablesInArea.filter(
+          (t) => t.tableStatus === "occupied",
+        ).length;
+        const reserved = tablesInArea.filter(
+          (t) => t.tableStatus === "reserved",
+        ).length;
+        const cleaning = tablesInArea.filter(
+          (t) => t.tableStatus === "cleaning",
+        ).length;
 
-    // ===== ZOOM ONLY THE CANVAS =====
-    function updateZoom() {
-        const floorPlan = document.getElementById('floorPlan');
+        document.getElementById("totalTables").textContent =
+          tablesInArea.length;
+        document.getElementById("availableCount").textContent = available;
+        document.getElementById("occupiedCount").textContent = occupied;
+        document.getElementById("reservedCount").textContent = reserved;
+        document.getElementById("cleaningCount").textContent = cleaning;
+      }
+
+      // ===== ZOOM ONLY THE CANVAS =====
+      function updateZoom() {
+        const floorPlan = document.getElementById("floorPlan");
         floorPlan.style.transform = `scale(${zoomLevel})`;
-        document.getElementById('zoomLevel').textContent = Math.round(zoomLevel * 100) + '%';
-    }
+        document.getElementById("zoomLevel").textContent =
+          Math.round(zoomLevel * 100) + "%";
+      }
 
-    document.getElementById('zoomInBtn').addEventListener('click', () => {
+      document.getElementById("zoomInBtn").addEventListener("click", () => {
         zoomLevel = Math.min(zoomLevel + 0.1, 3);
         updateZoom();
-    });
+      });
 
-    document.getElementById('zoomOutBtn').addEventListener('click', () => {
+      document.getElementById("zoomOutBtn").addEventListener("click", () => {
         zoomLevel = Math.max(zoomLevel - 0.1, 0.3);
         updateZoom();
-    });
+      });
 
-    document.getElementById('resetZoomBtn').addEventListener('click', () => {
+      document.getElementById("resetZoomBtn").addEventListener("click", () => {
         zoomLevel = 1;
         updateZoom();
-    });
+      });
 
-    // MOUSE WHEEL ZOOM - CANVAS ONLY
-    document.getElementById('floorPlanWrapper').addEventListener('wheel', (e) => {
-        if (e.ctrlKey || e.metaKey) {
+      // MOUSE WHEEL ZOOM - CANVAS ONLY
+      document
+        .getElementById("floorPlanWrapper")
+        .addEventListener("wheel", (e) => {
+          if (e.ctrlKey || e.metaKey) {
             e.preventDefault();
             if (e.deltaY < 0) {
-                zoomLevel = Math.min(zoomLevel + 0.1, 3);
+              zoomLevel = Math.min(zoomLevel + 0.1, 3);
             } else {
-                zoomLevel = Math.max(zoomLevel - 0.1, 0.3);
+              zoomLevel = Math.max(zoomLevel - 0.1, 0.3);
             }
             updateZoom();
-        }
-    });
+          }
+        });
 
-    // ADD AREA
-    document.getElementById('addAreaBtn').addEventListener('click', () => {
-        document.getElementById('areaName').value = '';
-        document.getElementById('areaIcon').value = '🏢';
-        document.getElementById('areaDescription').value = '';
-        document.getElementById('areaModal').classList.add('show');
-    });
+      // ADD AREA
+      document.getElementById("addAreaBtn").addEventListener("click", () => {
+        document.getElementById("areaName").value = "";
+        document.getElementById("areaIcon").value = "🏢";
+        document.getElementById("areaDescription").value = "";
+        document.getElementById("areaModal").classList.add("show");
+      });
 
-    document.getElementById('saveAreaBtn').addEventListener('click', async () => {
-        const areaData = {
-            areaName: document.getElementById('areaName').value,
+      document
+        .getElementById("saveAreaBtn")
+        .addEventListener("click", async () => {
+          const areaData = {
+            areaName: document.getElementById("areaName").value,
             restaurantId: restaurantId,
-            areaIcon: document.getElementById('areaIcon').value || '🏢',
-            areaDescription: document.getElementById('areaDescription').value
-        };
+            areaIcon: document.getElementById("areaIcon").value || "🏢",
+            areaDescription: document.getElementById("areaDescription").value,
+          };
 
-        if (!areaData.areaName) {
-            showNotification('Please enter area name', 'error');
+          if (!areaData.areaName) {
+            showNotification("Please enter area name", "error");
             return;
-        }
+          }
 
-        try {
-            const res = await fetch('/areas', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(areaData)
+          try {
+            const res = await fetch("/areas", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(areaData),
             });
 
             if (res.ok) {
-                fetchData();
-                document.getElementById('areaModal').classList.remove('show');
-                showNotification('Area created', 'success');
+              fetchData();
+              document.getElementById("areaModal").classList.remove("show");
+              showNotification("Area created", "success");
             }
-        } catch (error) {
-            showNotification('Error', 'error');
-        }
-    });
+          } catch (error) {
+            showNotification("Error", "error");
+          }
+        });
 
-    window.deleteArea = function(areaId) {
-        if (confirm('Delete this area?')) {
-            fetch(`/areas/${areaId}`, { method: 'DELETE' })
-                .then(() => {
-                    fetchData();
-                    showNotification('Area deleted', 'success');
-                });
+      window.deleteArea = function (areaId) {
+        if (confirm("Delete this area?")) {
+          fetch(`/areas/${areaId}`, { method: "DELETE" }).then(() => {
+            fetchData();
+            showNotification("Area deleted", "success");
+          });
         }
-    };
+      };
 
-    document.getElementById('addTableBtn').addEventListener('click', () => {
+      document.getElementById("addTableBtn").addEventListener("click", () => {
         if (!currentArea) {
-            showNotification('Create area first', 'error');
-            return;
+          showNotification("Create area first", "error");
+          return;
         }
         editingTableId = null;
-        document.getElementById('modalTitle').textContent = 'Add Table';
-        document.getElementById('tableNumber').value = '';
-        document.getElementById('capacity').value = '4';
-        document.getElementById('tableShape').value = 'round';
-        document.getElementById('tableStatus').value = 'available';
-        document.getElementById('assignedServer').value = '';
+        document.getElementById("modalTitle").textContent = "Add Table";
+        document.getElementById("tableNumber").value = "";
+        document.getElementById("capacity").value = "4";
+        document.getElementById("tableShape").value = "round";
+        document.getElementById("tableStatus").value = "available";
+        document.getElementById("assignedServer").value = "";
         updateAreaSelectDropdown();
-        document.getElementById('tableModal').classList.add('show');
-    });
+        document.getElementById("tableModal").classList.add("show");
+      });
 
-    document.getElementById('saveTableBtn').addEventListener('click', async () => {
-        const tableData = {
-            tableNumber: document.getElementById('tableNumber').value,
-            capacity: parseInt(document.getElementById('capacity').value),
-            tableShape: document.getElementById('tableShape').value,
-            tableStatus: document.getElementById('tableStatus').value,
-            area: document.getElementById('areaSelect').value,
-            assignedServer: document.getElementById('assignedServer').value,
-            restaurantId: restaurantId
-        };
+      document
+        .getElementById("saveTableBtn")
+        .addEventListener("click", async () => {
+          const tableData = {
+            tableNumber: document.getElementById("tableNumber").value,
+            capacity: parseInt(document.getElementById("capacity").value),
+            tableShape: document.getElementById("tableShape").value,
+            tableStatus: document.getElementById("tableStatus").value,
+            area: document.getElementById("areaSelect").value,
+            assignedServer: document.getElementById("assignedServer").value,
+            restaurantId: restaurantId,
+          };
 
-        try {
-            const res = await fetch(editingTableId ? `/tables/${editingTableId}` : '/tables', {
-                method: editingTableId ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(tableData)
-            });
+          try {
+            const res = await fetch(
+              editingTableId ? `/tables/${editingTableId}` : "/tables",
+              {
+                method: editingTableId ? "PUT" : "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(tableData),
+              },
+            );
 
             if (res.ok) {
-                fetchData();
-                document.getElementById('tableModal').classList.remove('show');
-                showNotification(editingTableId ? 'Updated' : 'Added', 'success');
+              fetchData();
+              document.getElementById("tableModal").classList.remove("show");
+              showNotification(editingTableId ? "Updated" : "Added", "success");
             }
-        } catch (error) {
-            showNotification('Error', 'error');
-        }
-    });
+          } catch (error) {
+            showNotification("Error", "error");
+          }
+        });
 
-    window.editTable = function(tableId) {
-        const table = allTables.find(t => t._id === tableId);
+      window.editTable = function (tableId) {
+        const table = allTables.find((t) => t._id === tableId);
         if (!table) return;
-        
+
         editingTableId = tableId;
-        document.getElementById('modalTitle').textContent = 'Edit Table';
-        document.getElementById('tableNumber').value = table.tableNumber;
-        document.getElementById('capacity').value = table.capacity;
-        document.getElementById('tableShape').value = table.tableShape || 'round';
-        document.getElementById('tableStatus').value = table.tableStatus || 'available';
+        document.getElementById("modalTitle").textContent = "Edit Table";
+        document.getElementById("tableNumber").value = table.tableNumber;
+        document.getElementById("capacity").value = table.capacity;
+        document.getElementById("tableShape").value =
+          table.tableShape || "round";
+        document.getElementById("tableStatus").value =
+          table.tableStatus || "available";
         updateAreaSelectDropdown();
-        document.getElementById('areaSelect').value = table.area;
-        document.getElementById('assignedServer').value = table.assignedServer || '';
-        document.getElementById('tableModal').classList.add('show');
-    };
+        document.getElementById("areaSelect").value = table.area;
+        document.getElementById("assignedServer").value =
+          table.assignedServer || "";
+        document.getElementById("tableModal").classList.add("show");
+      };
 
-    window.deleteTable = function(tableId) {
-        if (confirm('Delete?')) {
-            fetch(`/tables/${tableId}`, { method: 'DELETE' })
-                .then(() => {
-                    fetchData();
-                    showNotification('Deleted', 'success');
-                });
+      window.deleteTable = function (tableId) {
+        if (confirm("Delete?")) {
+          fetch(`/tables/${tableId}`, { method: "DELETE" }).then(() => {
+            fetchData();
+            showNotification("Deleted", "success");
+          });
         }
-    };
+      };
 
-    document.getElementById('areaModalClose').addEventListener('click', () => document.getElementById('areaModal').classList.remove('show'));
-    document.getElementById('cancelAreaBtn').addEventListener('click', () => document.getElementById('areaModal').classList.remove('show'));
-    document.getElementById('tableModalClose').addEventListener('click', () => document.getElementById('tableModal').classList.remove('show'));
-    document.getElementById('tableModalCancelBtn').addEventListener('click', () => document.getElementById('tableModal').classList.remove('show'));
-    document.getElementById('refreshBtn').addEventListener('click', () => { fetchData(); showNotification('Refreshed', 'success'); });
+      document
+        .getElementById("areaModalClose")
+        .addEventListener("click", () =>
+          document.getElementById("areaModal").classList.remove("show"),
+        );
+      document
+        .getElementById("cancelAreaBtn")
+        .addEventListener("click", () =>
+          document.getElementById("areaModal").classList.remove("show"),
+        );
+      document
+        .getElementById("tableModalClose")
+        .addEventListener("click", () =>
+          document.getElementById("tableModal").classList.remove("show"),
+        );
+      document
+        .getElementById("tableModalCancelBtn")
+        .addEventListener("click", () =>
+          document.getElementById("tableModal").classList.remove("show"),
+        );
+      document.getElementById("refreshBtn").addEventListener("click", () => {
+        fetchData();
+        showNotification("Refreshed", "success");
+      });
 
-    function showNotification(message, type = 'success') {
-        const notif = document.createElement('div');
+      function showNotification(message, type = "success") {
+        const notif = document.createElement("div");
         notif.className = `notification ${type}`;
         notif.textContent = message;
         document.body.appendChild(notif);
         setTimeout(() => notif.remove(), 3000);
-    }
+      }
 
-    socket.emit('joinRestaurant', restaurantId);
-    fetchData();
+      socket.emit("joinRestaurant", restaurantId);
+      fetchData();
 
-    // SELECT ALL functionality
-document.getElementById('selectAllBtn').onclick = function() {
-  selectedTables.clear();
-  const tablesInArea = allTables.filter(t => t.area === currentArea);
-  tablesInArea.forEach(t => selectedTables.add(t._id));
-  updateSelection();
-};
+      // SELECT ALL functionality
+      document.getElementById("selectAllBtn").onclick = function () {
+        selectedTables.clear();
+        const tablesInArea = allTables.filter((t) => t.area === currentArea);
+        tablesInArea.forEach((t) => selectedTables.add(t._id));
+        updateSelection();
+      };
 
+      document
+        .getElementById("saveBulkAddBtn")
+        .addEventListener("click", async () => {
+          const startNum = document
+            .getElementById("bulkStartNumber")
+            .value.trim();
+          const number = parseInt(document.getElementById("bulkNumber").value);
+          const shape = document.getElementById("bulkShape").value;
+          const area = document.getElementById("bulkAreaSelect").value;
 
-document.getElementById('saveBulkAddBtn').addEventListener('click', async () => {
-  const startNum = document.getElementById('bulkStartNumber').value.trim();
-  const number = parseInt(document.getElementById('bulkNumber').value);
-  const shape = document.getElementById('bulkShape').value;
-  const area = document.getElementById('bulkAreaSelect').value;
+          if (!startNum || !number || !shape || !area) {
+            alert("Please fill all fields");
+            return;
+          }
 
-  if (!startNum || !number || !shape || !area) {
-    alert('Please fill all fields');
-    return;
-  }
+          // Corrected regex: supports letters (T) and numbers (10)
+          const match = startNum.match(/^([a-zA-Z]+)([0-9]+)$/);
+          if (!match) {
+            alert(
+              "Invalid start table number format. Use a prefix followed by a number, e.g., T10",
+            );
+            return;
+          }
+          const prefix = match[1];
+          let num = parseInt(match[2]);
 
-  // Corrected regex: supports letters (T) and numbers (10)
-  const match = startNum.match(/^([a-zA-Z]+)([0-9]+)$/);
-  if (!match) {
-    alert('Invalid start table number format. Use a prefix followed by a number, e.g., T10');
-    return;
-  }
-  const prefix = match[1];
-  let num = parseInt(match[2]);
+          for (let i = 0; i < number; i++) {
+            const tableNumber = prefix + (num + i);
 
-  for (let i = 0; i < number; i++) {
-    const tableNumber = prefix + (num + i);
+            await fetch("/tables", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                tableNumber,
+                capacity: 4,
+                tableShape: shape,
+                tableStatus: "available",
+                area,
+                restaurantId,
+              }),
+            });
+          }
 
-    await fetch('/tables', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        tableNumber,
-        capacity: 4,
-        tableShape: shape,
-        tableStatus: 'available',
-        area,
-        restaurantId
-      })
-    });
-  }
-
-  document.getElementById('bulkAddModal').classList.remove('show');
-  fetchData();
-  showNotification(number + ' tables added', 'success');
-});
-
-</script>
-
-</body>
+          document.getElementById("bulkAddModal").classList.remove("show");
+          fetchData();
+          showNotification(number + " tables added", "success");
+        });
+    </script>
+  </body>
 </html>

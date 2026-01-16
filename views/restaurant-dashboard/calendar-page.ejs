@@ -207,10 +207,10 @@
             const monthName = new Date(y, m, 1).toLocaleString("default", {
               month: "long",
             });
-            const value = ${y}-${String(m + 1).padStart(2, "0")};
+            const value = `${y}-${String(m + 1).padStart(2, "0")}`;
             const option = document.createElement("option");
             option.value = value;
-            option.textContent = ${monthName} ${y};
+            option.textContent = `${monthName} ${y}`;
             selector.appendChild(option);
           }
         }
@@ -231,7 +231,7 @@
           const weekEnd = new Date(weekStart);
           weekEnd.setDate(weekStart.getDate() + 6);
           const weekKey = weekStart.toISOString().split("T")[0];
-          if (selector.querySelector(option[value="${weekKey}"])) continue;
+          if (selector.querySelector(`option[value="${weekKey}"]`)) continue;
           const startStr = weekStart.toLocaleDateString("en-US", {
             month: "short",
             day: "numeric",
@@ -243,7 +243,7 @@
           });
           const option = document.createElement("option");
           option.value = weekKey;
-          option.textContent = ${startStr} - ${endStr};
+          option.textContent = `${startStr} - ${endStr}`;
           selector.appendChild(option);
         }
       }
@@ -296,7 +296,7 @@
           year: "numeric",
         });
         document.getElementById("monthTitle").textContent = monthName;
-        const dropdownValue = ${year}-${String(month + 1).padStart(2, "0")};
+        const dropdownValue = `${year}-${String(month + 1).padStart(2, "0")}`;
         document.getElementById("monthYearSelector").value = dropdownValue;
         let html = "";
         for (let i = firstDay - 1; i >= 0; i--) {
@@ -314,14 +314,14 @@
             hasBookings ? "has-bookings" : ""
           }" data-date="${dateStr}"><div class="day-number">${day}</div>${
             hasBookings
-              ? <div class="booking-indicator">${bookingCount}</div>
+              ? `<div class="booking-indicator">${bookingCount}</div>`
               : ""
           }</div>`;
         }
         const totalCells = firstDay + daysInMonth;
         const remainingCells = 42 - totalCells;
         for (let day = 1; day <= remainingCells; day++) {
-          html += <div class="calendar-day other-month"><div class="day-number">${day}</div></div>;
+          html += `<div class="calendar-day other-month"><div class="day-number">${day}</div></div>`;
         }
         document.getElementById("calendarGrid").innerHTML = html;
       }
@@ -342,7 +342,7 @@
         });
         document.getElementById(
           "monthTitle"
-        ).textContent = Week: ${weekStart} - ${weekEndStr};
+        ).textContent = `Week: ${weekStart} - ${weekEndStr}`;
         const dropdownValue = startOfWeek.toISOString().split("T")[0];
         document.getElementById("weekYearSelector").value = dropdownValue;
         let html = "";
@@ -357,7 +357,7 @@
             hasBookings ? "has-bookings" : ""
           }" data-date="${dateStr}"><div class="day-number">${d.getDate()}</div>${
             hasBookings
-              ? <div class="booking-indicator">${bookingCount}</div>
+              ? `<div class="booking-indicator">${bookingCount}</div>`
               : ""
           }<div class="weekday-label">${d.toLocaleDateString("default", {
             weekday: "short",
@@ -386,7 +386,7 @@
           hasBookings ? "has-bookings" : ""
         }" data-date="${dateStr}"><div class="day-number">${date.getDate()}</div>${
           hasBookings
-            ? <div class="booking-indicator">${bookingCount} bookings</div>
+            ? `<div class="booking-indicator">${bookingCount} bookings</div>`
             : ""
         }<div class="weekday-label">${date.toLocaleDateString("default", {
           weekday: "long",
@@ -484,7 +484,7 @@
         document
           .querySelectorAll(".calendar-day.selected")
           .forEach((el) => el.classList.remove("selected"));
-        const dayElement = document.querySelector([data-date="${dateStr}"]);
+        const dayElement = document.querySelector(`[data-date="${dateStr}"]`);
         if (dayElement) dayElement.classList.add("selected");
         selectedDate = dateStr;
       }
@@ -493,7 +493,7 @@
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
         const day = String(date.getDate()).padStart(2, "0");
-        return ${year}-${month}-${day};
+        return `${year}-${month}-${day}`;
       }
 
       function isDateToday(date) {
@@ -532,10 +532,10 @@
         });
         document.getElementById(
           "bookingDateTitle"
-        ).textContent = Bookings for ${formattedDate};
+        ).textContent = `Bookings for ${formattedDate}`;
         let html = '<div class="bookings-list">';
         if (bookingsForDate.length === 0) {
-          html += <p class="no-bookings">✨ No bookings for this date</p>;
+          html += `<p class="no-bookings">✨ No bookings for this date</p>`;
         } else {
           bookingsForDate.sort(
             (a, b) => new Date(a.dateTime) - new Date(b.dateTime)
@@ -559,7 +559,7 @@
               booking.partySize
             } guests</strong></div><div class="booking-detail-item"><span class="booking-label">📱 Phone</span><strong>${phoneNumber}</strong></div><div class="booking-detail-item"><span class="booking-label">📧 Email</span><strong>${email}</strong></div></div>${
               booking.notes
-                ? <div class="booking-notes"><strong>📝 Notes:</strong> ${booking.notes}</div>
+                ? `<div class="booking-notes"><strong>📝 Notes:</strong> ${booking.notes}</div>`
                 : ""
             }</div>`;
           });
@@ -611,7 +611,7 @@
 
         document.getElementById(
           "statsDateInfo"
-        ).textContent = - ${formattedDate};
+        ).textContent = `- ${formattedDate}`;
         document.getElementById("totalBookings").textContent = total;
         document.getElementById("pendingCount").textContent = pending;
         document.getElementById("confirmedCount").textContent = confirmed;
@@ -624,7 +624,7 @@
       async function fetchBookings() {
         try {
           const res = await fetch(
-            /reservations/by-restaurant/${restaurantId}
+            `/reservations/by-restaurant/${restaurantId}`
           );
           if (res.ok) {
             allBookings = await res.json();
@@ -696,7 +696,7 @@
         const calendarContent = document.querySelector(".calendar-wrapper");
         const opt = {
           margin: 10,
-          filename: calendar-${new Date().toISOString().split("T")[0]}.pdf,
+          filename: `calendar-${new Date().toISOString().split("T")[0]}.pdf`,
           image: { type: "jpeg", quality: 0.98 },
           html2canvas: { scale: 2 },
           jsPDF: { orientation: "landscape" },
@@ -744,7 +744,7 @@
           });
           if (res.ok) {
             showNotification(
-              📧 Reminders sent to ${pendingBookings.length} customers,
+              `📧 Reminders sent to ${pendingBookings.length} customers`,
               "success"
             );
           } else {
