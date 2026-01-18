@@ -227,15 +227,7 @@
 
 
 <script>
-    const socket = io({
-        transports: ['websocket'],
-        reconnection: true
-    });
-    
-    socket.on("connect", () => {
-        console.log("✅ Floorplan View Socket Connected");
-        // Add room joining here if needed for this view
-    });
+    const socket = io();
     const restaurantId = '<%= restaurant._id %>';
     
     let allAreas = [];

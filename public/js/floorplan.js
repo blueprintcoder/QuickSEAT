@@ -30,18 +30,9 @@
   drawGrid();
 
   // socket.io
-  const socket = io({
-    transports: ['websocket'],
-    reconnection: true,
-    reconnectionAttempts: 5
-  });
-  
+  const socket = io();
   socket.on('connect', () => {
-    console.log("✅ Floorplan Socket Connected:", socket.id);
-    if (RESTAURANT_DB_ID) {
-      socket.emit('joinRestaurant', RESTAURANT_DB_ID);
-      console.log(`➡️ Joined restaurant room: ${RESTAURANT_DB_ID}`);
-    }
+    if (RESTAURANT_DB_ID) socket.emit('joinRestaurant', RESTAURANT_DB_ID);
   });
 
   // UI elements

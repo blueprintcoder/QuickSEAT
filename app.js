@@ -29,7 +29,10 @@ const server = http.createServer(app);
 
 // SOCKET.IO
 const io = new Server(server, {
-  // cors options removed to allow same-origin by default (works for localhost and render)
+  cors: {
+    origin: "https://zerowait.onrender.com",
+    methods: ["GET", "POST"],
+  },
 });
 
 // ==================== MIDDLEWARE (CORRECT ORDER) ====================

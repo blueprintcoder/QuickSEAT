@@ -108,15 +108,8 @@
       // SOCKET.IO SETUP
       // ========================
     const customerId = "<%= currentUser._id %>";
-    const socket = io({
-      transports: ['websocket'],
-      reconnection: true
-    });
-
-    socket.on("connect", () => {
-      console.log("✅ Customer Socket Connected");
-      socket.emit("joinCustomer", customerId);
-    });
+    const socket = io();
+    socket.emit("joinCustomer", customerId);
         // ✅ DEBUG: Monitor all socket events
 socket.onAny((eventName, ...args) => {
   console.log(`📡 Socket event received: ${eventName}`, args);
