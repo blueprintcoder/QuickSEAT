@@ -1124,10 +1124,13 @@
         );
 
         // Emit socket for real-time
+        // FIX: Ensure consistent payload with server
         socket.emit("bookingStatusChanged", {
           restaurantId,
           bookingId,
-          newStatus,
+          reservationId: bookingId, // Redundant but safe
+          status: newStatus === "confirmed" ? "approved" : "declined", // Backend status
+          newStatus: newStatus, // Frontend status ('confirmed'/'rejected')
         });
 
         showNotification(`Booking ${action}ed successfully!`, "success");
@@ -1164,33 +1167,37 @@
 
       console.log(`🔄 Processing status change: ${data.status} → ${displayStatus}`);
 
-      let card = document.querySelector(`[data-id="${bookingId}"]`);
+      let card = document.querySelector(`.reservation-entry[data-id="${bookingId}"]`);
 
 
       if (!card) {
-        card = Array.from(document.querySelectorAll(".reservation-entry")).find(el => el.dataset.id === data.bookingId);
+        // Fallback search
+        card = Array.from(document.querySelectorAll(".reservation-entry")).find(el => el.dataset.id === bookingId);
       }
       if (!card) {
-        console.warn("⚠️ Real-time: Card not found for", data.bookingId);
+        console.warn("⚠️ Real-time: Card not found for", bookingId);
         return;
       }
 
       let targetColumn, newClass, badgeText, badgeColor;
-      if (data.newStatus === "confirmed") {
+      if (displayStatus === "confirmed") {
         targetColumn = document.querySelector(".kanban-board .reservation-column:nth-child(2)");
         newClass = "confirmed";
         badgeText = "Confirmed";
         badgeColor = "#2ecc71";
-      } else if (data.newStatus === "rejected") {
+      } else if (displayStatus === "rejected") {
         targetColumn = document.querySelector(".kanban-board .reservation-column:nth-child(3)");
         newClass = "rejected";
         badgeText = "Rejected";
         badgeColor = "#e74c3c";
       }
-      if (!targetColumn) return;
+      if (!targetColumn) {
+         console.warn("⚠️ Target column not found for status:", displayStatus);
+         return;
+      }
 
       moveReservationCard(card, targetColumn, newClass, badgeText, badgeColor);
-      showNotification(`Booking ${data.newStatus} by another session!`, "info");
+      showNotification(`Booking ${displayStatus} by another session!`, "info");
     });
 
     // Event listener for buttons
