@@ -29,10 +29,7 @@ const server = http.createServer(app);
 
 // SOCKET.IO
 const io = new Server(server, {
-  cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
-  },
+  // cors options removed to allow same-origin by default (works for localhost and render)
 });
 
 // ==================== MIDDLEWARE (CORRECT ORDER) ====================
