@@ -626,7 +626,15 @@
     // ====================================
     // GLOBAL STATE & INITIALIZATION
     // ====================================
-    const socket = io();
+    const socket = io({
+      transports: ['websocket'], // Force WebSocket to avoid polling issues
+      reconnectionAttempts: 5
+    });
+    
+    socket.on("connect_error", (err) => {
+      console.error("❌ Socket connection error:", err);
+    });
+
     const restaurantId = "<%= restaurant._id %>";  // ✅ FIXED: Use MongoDB _id instead of custom restaurantId
     let dashboardAllTables = [];
     let dashboardAllAreas = [];

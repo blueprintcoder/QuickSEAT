@@ -68,7 +68,15 @@
     <%- include('../includes/footer') %> <!-- FIXED: Adjusted path to climb out of the sub-directory -->
 
     <script>
-        const socket = io();
+        const socket = io({
+            transports: ['websocket'],
+            reconnectionAttempts: 5
+        });
+
+        socket.on("connect_error", (err) => {
+            console.error("❌ Socket connection error:", err);
+        });
+
         const userId = "<%= user._id %>";
         const currentBookingId = "<%= booking._id %>";
 
