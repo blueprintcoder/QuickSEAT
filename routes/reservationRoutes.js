@@ -212,6 +212,122 @@ router.put('/:id/status', async (req, res) => {
     }
 });
 
+// // ============================================
+// // APPROVE RESERVATION
+// // ============================================
+// router.post('/reservations/:id/approve', async (req, res) => {
+//   try {
+//     const reservation = await Reservation.findByIdAndUpdate(
+//       req.params.id,
+//       { status: 'approved' },
+//       { new: true }
+//     ).populate('restaurant customer');
+
+//     if (!reservation) {
+//       return res.status(404).json({ success: false, error: "Reservation not found" });
+//     }
+
+//         // ✅ SEND EMAIL TO CUSTOMER
+//     try {
+//       await sendBookingApprovedNotification(
+//         reservation.customer.email,
+//         reservation,
+//         reservation.restaurant
+//       );
+//       console.log('📧 Booking approved email sent to customer');
+//     } catch (emailError) {
+//       console.error('❌ Error sending email:', emailError);
+//     }
+
+//     // ✅ FIXED: Emit to all relevant rooms with consistent data
+// const io = req.app.get('io');
+// if (io) {
+//   const eventData = {
+//     reservationId: reservation._id,
+//     bookingId: reservation._id,  // Add alternate ID field
+//     customerId: reservation.customer._id,
+//     status: 'approved',  // Backend status
+//     newStatus: 'approved',  // Explicit for frontend
+//     booking: reservation
+//   };
+
+//   // Emit to restaurant rooms (both IDs)
+//   io.to(`restaurant_${reservation.restaurant._id}`).emit('bookingStatusChanged', eventData);
+//   if (reservation.restaurant.restaurantId) {
+//     io.to(`restaurant_${reservation.restaurant.restaurantId}`).emit('bookingStatusChanged', eventData);
+//   }
+
+//   // Emit to customer room
+//   io.to(`customer_${reservation.customer._id}`).emit('bookingStatusChanged', eventData);
+
+//   console.log(`✅ Approval emitted - Restaurant: ${reservation.restaurant._id}, Customer: ${reservation.customer._id}`);
+// }
+
+//     return res.json({ success: true, message: "Reservation approved" });
+//   } catch (err) {
+//     console.error('❌ Approval error:', err);
+//     return res.status(500).json({ success: false, error: err.message });
+//   }
+// });
+
+// // ============================================
+// // REJECT RESERVATION
+// // ============================================
+// router.post('/reservations/:id/reject', async (req, res) => {
+//   try {
+//     const reservation = await Reservation.findByIdAndUpdate(
+//       req.params.id,
+//       { status: 'declined' },
+//       { new: true }
+//     ).populate('restaurant customer');
+
+//     if (!reservation) {
+//       return res.status(404).json({ success: false, error: "Reservation not found" });
+//     }
+
+//         // ✅ SEND EMAIL TO CUSTOMER
+//     try {
+//       await sendBookingDeclinedNotification(
+//         reservation.customer.email,
+//         reservation,
+//         reservation.restaurant
+//       );
+//       console.log('📧 Booking declined email sent to customer');
+//     } catch (emailError) {
+//       console.error('❌ Error sending email:', emailError);
+//     }
+
+//     // ✅ FIXED: Emit to all relevant rooms with consistent data
+// const io = req.app.get('io');
+// if (io) {
+//   const eventData = {
+//     reservationId: reservation._id,
+//     bookingId: reservation._id,
+//     customerId: reservation.customer._id,
+//     status: 'declined',  // Backend status
+//     newStatus: 'declined',
+//     booking: reservation
+//   };
+
+//   // Emit to restaurant rooms (both IDs)
+//   io.to(`restaurant_${reservation.restaurant._id}`).emit('bookingStatusChanged', eventData);
+//   if (reservation.restaurant.restaurantId) {
+//     io.to(`restaurant_${reservation.restaurant.restaurantId}`).emit('bookingStatusChanged', eventData);
+//   }
+
+//   // Emit to customer room
+//   io.to(`customer_${reservation.customer._id}`).emit('bookingStatusChanged', eventData);
+
+//   console.log(`✅ Rejection emitted - Restaurant: ${reservation.restaurant._id}, Customer: ${reservation.customer._id}`);
+// }
+
+//     return res.json({ success: true, message: "Reservation rejected" });
+//   } catch (err) {
+//     console.error('❌ Rejection error:', err);
+//     return res.status(500).json({ success: false, error: err.message });
+//   }
+// });
+
 // ============================================
 // APPROVE RESERVATION
 // ============================================
@@ -227,46 +343,37 @@ router.post('/reservations/:id/approve', async (req, res) => {
       return res.status(404).json({ success: false, error: "Reservation not found" });
     }
 
-        // ✅ SEND EMAIL TO CUSTOMER
-    try {
-      await sendBookingApprovedNotification(
-        reservation.customer.email,
-        reservation,
-        reservation.restaurant
-      );
-      console.log('📧 Booking approved email sent to customer');
-    } catch (emailError) {
-      console.error('❌ Error sending email:', emailError);
+    // 1. ✅ MOVE SOCKET EMIT HERE (Execute immediately after DB update)
+    const io = req.app.get('io');
+    if (io) {
+      const eventData = {
+        reservationId: reservation._id,
+        bookingId: reservation._id,
+        customerId: reservation.customer._id,
+        status: 'approved',
+        newStatus: 'confirmed', // Keep consistent with your frontend status map
+        booking: reservation
+      };
+      io.to(`restaurant_${reservation.restaurant._id}`).emit('bookingStatusChanged', eventData);
+      if (reservation.restaurant.restaurantId) {
+        io.to(`restaurant_${reservation.restaurant.restaurantId}`).emit('bookingStatusChanged', eventData);
+      }
+      io.to(`customer_${reservation.customer._id}`).emit('bookingStatusChanged', eventData);
     }
 
-    // ✅ FIXED: Emit to all relevant rooms with consistent data
-const io = req.app.get('io');
-if (io) {
-  const eventData = {
-    reservationId: reservation._id,
-    bookingId: reservation._id,  // Add alternate ID field
-    customerId: reservation.customer._id,
-    status: 'approved',  // Backend status
-    newStatus: 'approved',  // Explicit for frontend
-    booking: reservation
-  };
+    // 2. ✅ MOVE RESPONSE HERE (The UI will now update instantly)
+    res.json({ success: true, message: "Reservation approved" });
 
-  // Emit to restaurant rooms (both IDs)
-  io.to(`restaurant_${reservation.restaurant._id}`).emit('bookingStatusChanged', eventData);
-  if (reservation.restaurant.restaurantId) {
-    io.to(`restaurant_${reservation.restaurant.restaurantId}`).emit('bookingStatusChanged', eventData);
-  }
+    // 3. ✅ RUN EMAIL IN BACKGROUND (Remove 'await')
+    sendBookingApprovedNotification(
+      reservation.customer.email,
+      reservation,
+      reservation.restaurant
+    ).catch(err => console.error('📧 Email background error:', err));
 
-  // Emit to customer room
-  io.to(`customer_${reservation.customer._id}`).emit('bookingStatusChanged', eventData);
-
-  console.log(`✅ Approval emitted - Restaurant: ${reservation.restaurant._id}, Customer: ${reservation.customer._id}`);
-}
-
-    return res.json({ success: true, message: "Reservation approved" });
   } catch (err) {
     console.error('❌ Approval error:', err);
-    return res.status(500).json({ success: false, error: err.message });
+    if (!res.headersSent) res.status(500).json({ success: false, error: err.message });
   }
 });
 
@@ -285,46 +392,37 @@ router.post('/reservations/:id/reject', async (req, res) => {
       return res.status(404).json({ success: false, error: "Reservation not found" });
     }
 
-        // ✅ SEND EMAIL TO CUSTOMER
-    try {
-      await sendBookingDeclinedNotification(
-        reservation.customer.email,
-        reservation,
-        reservation.restaurant
-      );
-      console.log('📧 Booking declined email sent to customer');
-    } catch (emailError) {
-      console.error('❌ Error sending email:', emailError);
+    // 1. ✅ MOVE SOCKET EMIT HERE
+    const io = req.app.get('io');
+    if (io) {
+      const eventData = {
+        reservationId: reservation._id,
+        bookingId: reservation._id,
+        customerId: reservation.customer._id,
+        status: 'declined',
+        newStatus: 'rejected', // Match your frontend 'rejected' status
+        booking: reservation
+      };
+      io.to(`restaurant_${reservation.restaurant._id}`).emit('bookingStatusChanged', eventData);
+      if (reservation.restaurant.restaurantId) {
+        io.to(`restaurant_${reservation.restaurant.restaurantId}`).emit('bookingStatusChanged', eventData);
+      }
+      io.to(`customer_${reservation.customer._id}`).emit('bookingStatusChanged', eventData);
     }
 
-    // ✅ FIXED: Emit to all relevant rooms with consistent data
-const io = req.app.get('io');
-if (io) {
-  const eventData = {
-    reservationId: reservation._id,
-    bookingId: reservation._id,
-    customerId: reservation.customer._id,
-    status: 'declined',  // Backend status
-    newStatus: 'declined',
-    booking: reservation
-  };
+    // 2. ✅ MOVE RESPONSE HERE
+    res.json({ success: true, message: "Reservation rejected" });
 
-  // Emit to restaurant rooms (both IDs)
-  io.to(`restaurant_${reservation.restaurant._id}`).emit('bookingStatusChanged', eventData);
-  if (reservation.restaurant.restaurantId) {
-    io.to(`restaurant_${reservation.restaurant.restaurantId}`).emit('bookingStatusChanged', eventData);
-  }
+    // 3. ✅ RUN EMAIL IN BACKGROUND (Remove 'await')
+    sendBookingDeclinedNotification(
+      reservation.customer.email,
+      reservation,
+      reservation.restaurant
+    ).catch(err => console.error('📧 Email background error:', err));
 
-  // Emit to customer room
-  io.to(`customer_${reservation.customer._id}`).emit('bookingStatusChanged', eventData);
-
-  console.log(`✅ Rejection emitted - Restaurant: ${reservation.restaurant._id}, Customer: ${reservation.customer._id}`);
-}
-
-    return res.json({ success: true, message: "Reservation rejected" });
   } catch (err) {
     console.error('❌ Rejection error:', err);
-    return res.status(500).json({ success: false, error: err.message });
+    if (!res.headersSent) res.status(500).json({ success: false, error: err.message });
   }
 });
 
