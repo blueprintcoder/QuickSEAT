@@ -30,7 +30,7 @@ const server = http.createServer(app);
 // SOCKET.IO
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "*", // Allow all origins to fix production CORS issues
     methods: ["GET", "POST"],
   },
 });

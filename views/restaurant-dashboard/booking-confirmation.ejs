@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/auth.css">
     <link rel="stylesheet" href="/css/booking-confirmation.css">
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
     <%- include('../includes/navbar') %> <!-- FIXED: Adjusted path to climb out of the sub-directory -->
@@ -67,69 +68,89 @@
     <%- include('../includes/footer') %> <!-- FIXED: Adjusted path to climb out of the sub-directory -->
 
     <script>
-    function handleStatusChange(reservationId, newStatus) {
-        const action = newStatus === 'approved' ? 'approve' : 'reject';
-        if (!confirm(`Are you sure you want to ${action} this reservation?`)) {
-            return;
+        const socket = io({
+            transports: ['websocket'],
+            reconnectionAttempts: 5
+        });
+
+        socket.on("connect_error", (err) => {
+            console.error("❌ Socket connection error:", err);
+        });
+
+        const userId = "<%= user._id %>";
+        const currentBookingId = "<%= booking._id %>";
+
+        // Join customer room
+        socket.emit("joinCustomer", userId);
+        console.log("🔌 Connected to socket. Joining room: customer_" + userId);
+
+        socket.on("bookingStatusChanged", (data) => {
+            console.log("📡 Status update received:", data);
+
+            // Check if this update is for the current booking
+            const eventBookingId = data.bookingId || data.reservationId;
+            if (eventBookingId !== currentBookingId) return;
+
+            const status = data.newStatus || data.status; // 'confirmed', 'rejected', 'approved', 'declined'
+            
+            updateUI(status);
+        });
+
+        function updateUI(status) {
+            const statusIcon = document.querySelector(".confirmation-header");
+            const statusHeading = document.querySelector("h2");
+            const statusBadge = document.querySelector(".status-badge");
+            const statusMessage = document.querySelector(".confirmation-container > p:last-of-type"); // Selects the paragraph before buttons
+
+            // Normalize status string
+            const normalizedStatus = status.toLowerCase();
+
+            if (normalizedStatus === 'confirmed' || normalizedStatus === 'approved') {
+                statusIcon.textContent = "✓";
+                statusIcon.style.backgroundColor = "#2ecc71"; // Green
+                statusHeading.textContent = "Booking Confirmed!";
+                statusBadge.textContent = "Status: Confirmed";
+                statusBadge.style.color = "#2ecc71";
+                statusBadge.style.backgroundColor = "#e8f8f0";
+                
+                if (statusMessage) {
+                    statusMessage.textContent = "Your booking has been confirmed by the restaurant! Enjoy your meal.";
+                }
+
+                // Optional: Use SweetAlert if available
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Booking Confirmed!',
+                        text: 'The restaurant has accepted your reservation.',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                }
+
+            } else if (normalizedStatus === 'rejected' || normalizedStatus === 'declined') {
+                statusIcon.textContent = "✕";
+                statusIcon.style.backgroundColor = "#e74c3c"; // Red
+                statusHeading.textContent = "Booking Rejected";
+                statusBadge.textContent = "Status: Rejected";
+                statusBadge.style.color = "#e74c3c";
+                statusBadge.style.backgroundColor = "#fdeaea";
+                
+                if (statusMessage) {
+                    statusMessage.textContent = "Sorry, the restaurant could not accommodate your request at this time.";
+                }
+
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Booking Rejected',
+                        text: 'The restaurant could not accept your reservation.',
+                        timer: 3000,
+                        showConfirmButton: false
+                    });
+                }
+            }
         }
-
-        fetch(`/reservations/${reservationId}/status`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                // Add if using sessions: 'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]').content,
-            },
-            body: JSON.stringify({ status: newStatus })
-        })
-        .then(response => {
-            if (!response.ok) {
-                // NEW: Check if response is HTML (common error case)
-                return response.text().then(text => {
-                    throw new Error(`Server error ${response.status}: ${text.substring(0, 200)}... (Likely missing route or auth issue)`);
-                });
-            }
-            // NEW: Safely parse JSON, handle non-JSON
-            const contentType = response.headers.get('content-type');
-            if (!contentType || !contentType.includes('application/json')) {
-                throw new Error('Server returned non-JSON response (e.g., HTML error page)');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                window.location.reload(); // Refresh to show updates
-            } else {
-                alert('Failed to update: ' + (data.message || 'Unknown server error'));
-            }
-        })
-        .catch(error => {
-            console.error('Status update error:', error);
-            alert(`Update failed: ${error.message}\n\nCheck browser console (F12 > Console) for details. Common fix: Ensure server route exists.`);
-        });
-    }
-
-    // Event listeners (ensure they match your dashboard HTML classes)
-    document.addEventListener('DOMContentLoaded', () => {
-        // UPDATED: More flexible selector for your board/buttons from screenshots
-        const approveButtons = document.querySelectorAll('[data-action="approve"], .btn-approve');
-        const rejectButtons = document.querySelectorAll('[data-action="reject"], .btn-reject');
-
-        approveButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const id = btn.getAttribute('data-id') || btn.closest('.booking-card').getAttribute('data-id'); // Fallback selector
-                handleStatusChange(id, 'approved');
-            });
-        });
-
-        rejectButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                e.preventDefault();
-                const id = btn.getAttribute('data-id') || btn.closest('.booking-card').getAttribute('data-id');
-                handleStatusChange(id, 'declined'); // Matches your model logic
-            });
-        });
-    });
-</script>
+    </script>
 </body>
 </html>

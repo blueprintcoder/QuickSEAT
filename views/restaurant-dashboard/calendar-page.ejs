@@ -188,8 +188,9 @@
     </div>
 
     <script>
-      const socket = io();
-      const restaurantId = "<%= restaurant._id %>";
+    const restaurantId = "<%= restaurant._id %>"; 
+    const socket = io();
+    socket.emit("joinRestaurant", restaurantId);
 
       let currentDate = new Date();
       let weekStartDate = null;

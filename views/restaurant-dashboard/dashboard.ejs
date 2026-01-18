@@ -626,7 +626,15 @@
     // ====================================
     // GLOBAL STATE & INITIALIZATION
     // ====================================
-    const socket = io();
+    const socket = io({
+      transports: ['websocket'], // Force WebSocket to avoid polling issues
+      reconnectionAttempts: 5
+    });
+    
+    socket.on("connect_error", (err) => {
+      console.error("❌ Socket connection error:", err);
+    });
+
     const restaurantId = "<%= restaurant._id %>";  // ✅ FIXED: Use MongoDB _id instead of custom restaurantId
     let dashboardAllTables = [];
     let dashboardAllAreas = [];
@@ -1152,7 +1160,7 @@
 
       console.log(`🔄 Processing status change: ${data.status} → ${displayStatus}`);
 
-      let card = document.querySelector(`[data-id="${bookingId}"]`);
+      let card = document.querySelector(`.reservation-entry[data-id="${bookingId}"]`);
 
 
       if (!card) {
@@ -1179,17 +1187,6 @@
 
       moveReservationCard(card, targetColumn, newClass, badgeText, badgeColor);
       showNotification(`Booking ${data.newStatus} by another session!`, "info");
-    });
-
-    // Event listener for buttons
-    document.addEventListener("click", (e) => {
-      if (e.target.classList.contains("btn-approve")) {
-        const bookingId = e.target.dataset.id;
-        handleStatusChange(bookingId, "confirmed", e.target);
-      } else if (e.target.classList.contains("btn-reject")) {
-        const bookingId = e.target.dataset.id;
-        handleStatusChange(bookingId, "rejected", e.target);
-      }
     });
 
     // ====================================
@@ -1258,6 +1255,19 @@
       console.log(
         "🚀 Dashboard loaded - Socket joined room: restaurant_" + restaurantId
       );
+
+      // EVENT DELEGATION FOR DYNAMIC BUTTONS
+      document.body.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-approve')) {
+          const bookingId = e.target.getAttribute('data-id');
+          handleStatusChange(bookingId, 'confirmed', e.target);
+        }
+        
+        if (e.target.classList.contains('btn-reject')) {
+          const bookingId = e.target.getAttribute('data-id');
+          handleStatusChange(bookingId, 'rejected', e.target);
+        }
+      });
     });
   </script>
 </body>

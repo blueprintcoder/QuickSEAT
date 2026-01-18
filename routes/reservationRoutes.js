@@ -593,8 +593,14 @@ router.patch('/:id/status', isRestaurantLoggedIn, async (req, res) => {
     }
 
     // Auth check: Ensure it's the restaurant's booking
-    if (reservation.restaurant.restaurantId !== req.session.restaurantId) {
-      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    const sessionRestId = req.session.restaurantId;
+    const dbRestId = reservation.restaurant.restaurantId;
+    const dbRestObjId = reservation.restaurant._id.toString();
+
+    // Allow if session ID matches custom ID OR ObjectId
+    if (sessionRestId !== dbRestId && sessionRestId !== dbRestObjId) {
+       console.warn(`⚠️ Auth Fail: Session '${sessionRestId}' vs DB '${dbRestId}' / '${dbRestObjId}'`);
+       return res.status(403).json({ success: false, message: 'Unauthorized: Restaurant ID mismatch' });
     }
 
     // ✅ ADD: Send appropriate email (non-blocking)

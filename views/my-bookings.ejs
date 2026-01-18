@@ -107,14 +107,9 @@
       // ========================
       // SOCKET.IO SETUP
       // ========================
-      const socket = io();
-      const userId = "<%= currentUser ? currentUser._id : null %>";
-
-      if (userId) {
-        console.log("🔌 Connected to Socket.IO. User ID:", userId);
-
-        // ✅ JOIN CUSTOMER-SPECIFIC ROOM
-        socket.emit("joinCustomer", userId);
+    const customerId = "<%= currentUser._id %>";
+    const socket = io();
+    socket.emit("joinCustomer", customerId);
         // ✅ DEBUG: Monitor all socket events
 socket.onAny((eventName, ...args) => {
   console.log(`📡 Socket event received: ${eventName}`, args);
