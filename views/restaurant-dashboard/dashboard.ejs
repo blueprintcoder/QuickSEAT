@@ -1247,6 +1247,19 @@
       console.log(
         "🚀 Dashboard loaded - Socket joined room: restaurant_" + restaurantId
       );
+
+      // EVENT DELEGATION FOR DYNAMIC BUTTONS
+      document.body.addEventListener('click', (e) => {
+        if (e.target.classList.contains('btn-approve')) {
+          const bookingId = e.target.getAttribute('data-id');
+          handleStatusChange(bookingId, 'confirmed', e.target);
+        }
+        
+        if (e.target.classList.contains('btn-reject')) {
+          const bookingId = e.target.getAttribute('data-id');
+          handleStatusChange(bookingId, 'rejected', e.target);
+        }
+      });
     });
   </script>
 </body>
