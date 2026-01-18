@@ -623,6 +623,20 @@
   <div id="statusMenu" class="context-menu" style="display: none"></div>
 
   <script>
+
+
+
+
+    const socket = io({
+  transports: ['polling', 'websocket'], // Polling helps on Render/Heroku
+  reconnectionDelay: 1000,
+  reconnectionAttempts: 10
+  });
+
+
+
+
+
     // ====================================
     // GLOBAL STATE & INITIALIZATION
     // ====================================
