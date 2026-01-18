@@ -626,15 +626,27 @@
     // ====================================
     // GLOBAL STATE & INITIALIZATION
     // ====================================
-    const socket = io();
+    const socket = io({
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5
+    });
     const restaurantId = "<%= restaurant._id %>";  // ✅ FIXED: Use MongoDB _id instead of custom restaurantId
     let dashboardAllTables = [];
     let dashboardAllAreas = [];
     let currentDashboardFloorId = null;
     let currentZoomLevel = 0.3; // Initial scale factor
     const FLOOR_PLAN_DIV_ID = "dashboardFloorPlan";
-    socket.emit("joinRestaurant", restaurantId);
-    console.log("🔌 Connected to Socket.IO. Joined room: restaurant_" + restaurantId);
+
+    socket.on("connect", () => {
+      console.log("🔌 Connected to Socket.IO:", socket.id);
+      socket.emit("joinRestaurant", restaurantId);
+      console.log("➡️ Joined room: restaurant_" + restaurantId);
+    });
+
+    socket.on("connect_error", (err) => {
+      console.error("❌ Socket Connection Error:", err);
+    });
 
     // ====================================
     // SWEETALERT2 STYLISH NOTIFICATION

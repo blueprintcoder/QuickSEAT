@@ -188,8 +188,16 @@
     </div>
 
     <script>
-      const socket = io();
-      const restaurantId = "<%= restaurant._id %>";
+    const restaurantId = "<%= restaurant._id %>"; 
+    const socket = io({
+      transports: ['websocket'],
+      reconnection: true
+    });
+
+    socket.on("connect", () => {
+      console.log("✅ Calendar Socket Connected");
+      socket.emit("joinRestaurant", restaurantId);
+    });
 
       let currentDate = new Date();
       let weekStartDate = null;

@@ -491,7 +491,14 @@
     <%- include('../includes/footer') %>
 
     <script>
-      const socket = io();
+      const socket = io({
+      transports: ['websocket'],
+      reconnection: true
+    });
+
+    socket.on("connect", () => {
+      console.log("✅ Home Page Socket Connected");
+    });
 
       socket.on("restaurantUpdated", (data) => {
         const card = document.querySelector(`[data-id="${data._id}"]`);

@@ -107,14 +107,16 @@
       // ========================
       // SOCKET.IO SETUP
       // ========================
-      const socket = io();
-      const userId = "<%= currentUser ? currentUser._id : null %>";
+    const customerId = "<%= currentUser._id %>";
+    const socket = io({
+      transports: ['websocket'],
+      reconnection: true
+    });
 
-      if (userId) {
-        console.log("🔌 Connected to Socket.IO. User ID:", userId);
-
-        // ✅ JOIN CUSTOMER-SPECIFIC ROOM
-        socket.emit("joinCustomer", userId);
+    socket.on("connect", () => {
+      console.log("✅ Customer Socket Connected");
+      socket.emit("joinCustomer", customerId);
+    });
         // ✅ DEBUG: Monitor all socket events
 socket.onAny((eventName, ...args) => {
   console.log(`📡 Socket event received: ${eventName}`, args);
