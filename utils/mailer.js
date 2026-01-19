@@ -106,7 +106,7 @@ const sendBookingDeclinedNotification = (customerEmail, booking, restaurant) => 
             
             <p>You can try booking another time or contact the restaurant directly for more information.</p>
             
-            <p><a href="${process.env.APP_BASE_URL || 'http://localhost:8080'}/restaurants" style="background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Browse Restaurants</a></p>
+            <p><a href="${process.env.APP_BASE_URL || 'https://zerowait.onrender.com/'}/restaurants" style="background: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Browse Restaurants</a></p>
             
             <p>Best regards,<br><strong>QuickSEAT Team</strong></p>
         `
