@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QuickSEAT | Complete Project Bible</title>
+    <style>
+        /* --- RESET & BASE --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: #050505;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* --- GLOBAL SCROLL BEHAVIOR --- 
+           Unified smooth scroll for the entire page. 
+           Removed strict snapping to ensure "synchronization" between intro and manual.
+        */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        /* PROGRESS BAR */
+        #progress { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            height: 4px; 
+            background: #00d2ff; 
+            width: 0%; 
+            z-index: 999; 
+            transition: width 0.1s; 
+            box-shadow: 0 0 10px #00d2ff;
+        }
+
+        /* =========================================
+           PART 1: VISUAL OVERVIEW (TIKTOK STYLE)
+           ========================================= */
+        #tiktok-intro {
+            width: 100%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .tiktok-card {
+            min-height: 90vh; /* Slightly less than 100 to encourage scrolling */
+            width: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px 20px;
+            background-size: cover;
+            background-position: center;
+            overflow: hidden;
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+        }
+
+        /* GRADIENTS */
+        .bg-1 { background: linear-gradient(160deg, #1a1a2e, #16213e); }
+        .bg-2 { background: linear-gradient(160deg, #11998e, #38ef7d); }
+        .bg-3 { background: linear-gradient(160deg, #eb3349, #f45c43); }
+        .bg-4 { background: linear-gradient(160deg, #4e54c8, #8f94fb); }
+        .bg-5 { background: linear-gradient(160deg, #232526, #414345); }
+        .bg-6 { background: linear-gradient(160deg, #cc2b5e, #753a88); }
+
+        /* CONTENT ANIMATION */
+        .tk-content {
+            z-index: 2;
+            max-width: 600px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .tiktok-card.active .tk-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .tk-emoji { font-size: 4rem; margin-bottom: 15px; display: block; filter: drop-shadow(0 0 10px rgba(0,0,0,0.5)); }
+
+        .tk-h1 {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            font-weight: 900;
+            letter-spacing: -1px;
+        }
+
+        .tk-h2 {
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(5px);
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 50px;
+            border: 1px solid rgba(255,255,255,0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .tk-ul {
+            list-style: none;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: left;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            display: inline-block;
+        }
+
+        .tk-li { margin-bottom: 12px; display: flex; align-items: center; }
+
+        /* TICKER */
+        .ticker-wrap {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            overflow: hidden;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 30px 0 15px 0;
+            z-index: 10;
+        }
+        .ticker {
+            display: inline-block;
+            white-space: nowrap;
+            animation: ticker 15s infinite linear;
+            font-size: 0.8rem;
+            color: rgba(255,255,255,0.7);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+        @keyframes ticker { 0% { transform: translate3d(100%, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+        /* =========================================
+           PART 2: TECHNICAL MANUAL (DOCUMENTATION)
+           ========================================= */
+        #manual-container {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding-bottom: 150px;
+            background-color: #050505;
+            position: relative;
+            z-index: 20;
+            margin-top: -50px; /* Overlap effect */
+            border-radius: 30px 30px 0 0;
+            box-shadow: 0 -20px 50px rgba(0,0,0,0.8);
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 20px;
+        }
+
+        .manual-header {
+            padding: 60px 20px;
+            text-align: center;
+        }
+        .manual-header h2 { 
+            color: #00d2ff; 
+            font-size: 2.5rem; 
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+
+        /* SECTIONS */
+        section.doc-section {
+            padding: 60px 20px;
+            margin: 20px 0;
+        }
+
+        @media (min-width: 768px) {
+            section.doc-section { padding: 60px 40px; }
+        }
+
+        /* DOC CONTENT BOX */
+        .doc-content {
+            background: rgba(20, 20, 20, 0.6);
+            padding: 40px;
+            border-radius: 16px;
+            border-left: 3px solid rgba(255,255,255,0.1);
+            transition: all 0.4s ease;
+            opacity: 0.5;
+            transform: translateX(-20px);
+        }
+
+        section.doc-section.active .doc-content {
+            opacity: 1;
+            transform: translateX(0);
+            background: rgba(25, 25, 25, 1);
+            border-left-color: #00d2ff;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        /* TYPOGRAPHY MANUAL */
+        .doc-h1 { color: #fff; margin-bottom: 25px; font-size: 2.2rem; font-weight: 800; letter-spacing: -1px; }
+        .doc-h2 { color: #00d2ff; margin-top: 40px; margin-bottom: 15px; font-size: 1.4rem; font-weight: 700; display: flex; align-items: center; }
+        .doc-h2::before { content:'#'; margin-right: 10px; color: rgba(255,255,255,0.2); }
+        .doc-p, .doc-li { color: #b0b0b0; line-height: 1.7; font-size: 1.05rem; margin-bottom: 20px; }
+        .doc-ul { padding-left: 20px; }
+
+        /* CODE BLOCKS */
+        .code-block {
+            background: #0e0e0e; border: 1px solid #333; border-left: 4px solid #00d2ff; padding: 20px; margin: 25px 0;
+            border-radius: 8px; font-family: 'Consolas', monospace; color: #a6e22e; overflow-x: auto; white-space: pre-wrap; font-size: 0.9rem;
+        }
+        .code-comment { color: #5c6370; font-style: italic; }
+
+        /* QA BOX */
+        .qa-box {
+            background: rgba(255,255,255,0.03); padding: 25px; border-radius: 12px; margin-bottom: 20px; border-left: 3px solid #ff0055;
+        }
+        .q { color: #fff; font-weight: 700; margin-bottom: 10px; font-size: 1.1rem; }
+        .a { color: #bbb; line-height: 1.6; }
+
+    </style>
+</head>
+<body>
+
+    <div id="progress"></div>
+
+    <!-- =================================================================
+         PART 1: PROJECT OVERVIEW (TIKTOK STYLE)
+         ================================================================= -->
+    <div id="tiktok-intro">
+        
+        <!-- SLIDE 1: INTRO -->
+        <div class="tiktok-card bg-1 active-card">
+            <div class="tk-content">
+                <div class="tk-emoji">🍽️</div>
+                <div class="tk-h1">QuickSEAT</div>
+                <div class="tk-h2">The Project Overview</div>
+                <ul class="tk-ul">
+                    <li class="tk-li">🚀 Full-Stack Reservation System</li>
+                    <li class="tk-li">🎯 Solves "Double Booking" Chaos</li>
+                    <li class="tk-li">🔥 Built with the MEEN Stack</li>
+                </ul>
+            </div>
+            <div class="ticker-wrap"><div class="ticker">♫ QuickSEAT - Project Introduction • Full Stack Architecture</div></div>
+        </div>
+
+        <!-- SLIDE 2: THE STACK -->
+        <div class="tiktok-card bg-2">
+            <div class="tk-content">
+                <div class="tk-emoji">💻</div>
+                <div class="tk-h1">The Stack</div>
+                <div class="tk-h2">Core Technologies</div>
+                <ul class="tk-ul">
+                    <li class="tk-li">🍃 <strong>MongoDB:</strong> NoSQL Database</li>
+                    <li class="tk-li">🚂 <strong>Express:</strong> Backend API</li>
+                    <li class="tk-li">🎨 <strong>EJS:</strong> Server Rendering</li>
+                    <li class="tk-li">🟢 <strong>Node.js:</strong> Runtime</li>
+                </ul>
+            </div>
+            <div class="ticker-wrap"><div class="ticker">♫ Technology Stack - MongoDB Express EJS Node • MEEN</div></div>
+        </div>
+
+        <!-- SLIDE 3: KEY FEATURES -->
+        <div class="tiktok-card bg-3">
+            <div class="tk-content">
+                <div class="tk-emoji">🔥</div>
+                <div class="tk-h1">Features</div>
+                <div class="tk-h2">What makes it tick?</div>
+                <ul class="tk-ul">
+                    <li class="tk-li">⚡ <strong>Socket.io:</strong> Real-Time Updates</li>
+                    <li class="tk-li">🎨 <strong>Konva.js:</strong> Vector Floor Plan</li>
+                    <li class="tk-li">🔐 <strong>Dual Auth:</strong> User vs Manager</li>
+                </ul>
+            </div>
+            <div class="ticker-wrap"><div class="ticker">♫ Key Features - Realtime WebSockets • Canvas API</div></div>
+        </div>
+
+        <!-- SLIDE 4: TRANSITION -->
+        <div class="tiktok-card bg-4">
+            <div class="tk-content">
+                <div class="tk-emoji">📂</div>
+                <div class="tk-h1">Deep Dive</div>
+                <div class="tk-h2">Technical Documentation</div>
+                <p style="margin-top: 20px; font-size: 1.2rem; max-width: 500px;">
+                    Below is the complete manual. It covers every line of code, every architectural decision, and every interview question.
+                </p>
+                <div style="margin-top:30px; font-size: 3rem; animation: pulse 1.5s infinite;">⬇️</div>
+            </div>
+            <style>@keyframes pulse { 0% { transform: translateY(0); } 50% { transform: translateY(10px); } 100% { transform: translateY(0); } }</style>
+        </div>
+
+    </div>
+
+    <!-- =================================================================
+         PART 2: DETAILED TECHNICAL MANUAL
+         ================================================================= -->
+    <div id="manual-container">
+        
+        <div class="manual-header">
+            <h2>The Technical Manual</h2>
+            <p style="color:#888;">Architecture • Security • Logic • Interview Q&A</p>
+        </div>
+
+        <!-- 1. ARCHITECTURE -->
+        <section class="doc-section">
+            <div class="doc-content">
+                <div class="doc-h1">1. Core Architecture</div>
+                <p class="doc-p"><strong>The Monolith:</strong> QuickSEAT is a Monolithic MVC application. Frontend (EJS) and Backend (Express) run together on the same server instance.</p>
+
+                <div class="doc-h2">1.1 The Entry Point (app.js)</div>
+                <p class="doc-p">The initialization order is critical. We build a "Pipeline" where the request flows through security checks before hitting logic.</p>
+                <div class="code-block">
+<span class="code-comment">// 1. Create Server (HTTP + Express)</span>
+const app = express();
+const server = http.createServer(app); // Needed for Socket.io attachment
+const io = new Server(server);
+
+<span class="code-comment">// 2. Middleware Pipeline (Strict Order)</span>
+app.use(express.urlencoded());  // Parse Body FIRST
+app.use(methodOverride('_method')); // Allow PUT/DELETE
+app.use(session(...));          // Create Session Bucket
+app.use(passport.initialize()); // Auth Check
+app.use(passport.session());    // User Persistence
+</div>
+                <p class="doc-p"><strong>Why this order?</strong> `passport.session()` cannot work if `session()` hasn't created the `req.session` object yet. The body parser must run first so we can read POST data.</p>
+            </div>
+        </section>
+
+        <!-- 2. SECURITY -->
+        <section class="doc-section">
+            <div class="doc-content">
+                <div class="doc-h1">2. Security & Dual Auth</div>
+                <p class="doc-p">The project employs a <strong>Parallel Pipeline</strong> strategy for authentication to strictly separate Customers from Managers.</p>
+
+                <div class="doc-h2">2.1 Customer Auth (Passport)</div>
+                <p class="doc-p">Used for public users. Implements the standard `passport-local` strategy, serializing the `User._id` into the session.</p>
+
+                <div class="doc-h2">2.2 Manager Auth (Custom Middleware)</div>
+                <p class="doc-p">A dedicated system for business logic. It does not use Passport.</p>
+                <div class="code-block">
+<span class="code-comment">// middleware/auth.js</span>
+const isRestaurantLoggedIn = (req, res, next) => {
+    // We check for a SPECIFIC session key that only a Manager login can set
+    if (req.session.restaurantId) { 
+        return next(); 
+    }
+    // Access Denied
+    res.redirect('/restaurant/login');
+};
+</div>
+                <p class="doc-p"><strong>Security Win:</strong> Even if a malicious user is logged in as a Customer, they cannot access the Dashboard because the middleware specifically looks for `restaurantId`, which their session does not contain.</p>
+            </div>
+        </section>
+
+        <!-- 3. REAL-TIME -->
+        <section class="doc-section">
+            <div class="doc-content">
+                <div class="doc-h1">3. Real-Time Logic</div>
+                <p class="doc-p">We use <strong>Socket.io</strong> to solve the "Stale Data" problem inherent in HTTP.</p>
+
+                <div class="doc-h2">3.1 Pub/Sub Rooms</div>
+                <p class="doc-p">To ensure privacy, we use Rooms. Updates are not broadcast globally.</p>
+                <div class="code-block">
+<span class="code-comment">// 1. Subscribe (Dashboard Frontend)</span>
+socket.emit('joinRestaurant', 'REST_123');
+
+<span class="code-comment">// 2. Channel Creation (Backend)</span>
+socket.on('joinRestaurant', (id) => {
+    socket.join(`restaurant_${id}`);
+});
+
+<span class="code-comment">// 3. Publish (Reservation Route)</span>
+await booking.save();
+io.to(`restaurant_${id}`).emit('newBooking', data);
+</div>
+                <p class="doc-p"><strong>Result:</strong> When a booking happens, the Manager's screen updates instantly via DOM manipulation without a page reload.</p>
+            </div>
+        </section>
+
+        <!-- 4. FLOOR PLAN -->
+        <section class="doc-section">
+            <div class="doc-content">
+                <div class="doc-h1">4. Interactive Floor Plan</div>
+                <p class="doc-p"><strong>The Challenge:</strong> How to store an editable visual layout in a text-based database.</p>
+                <p class="doc-p"><strong>The Solution:</strong> Vector Serialization using Konva.js.</p>
+
+                <div class="doc-h2">4.1 Data Structure</div>
+                <p class="doc-p">We store an array of object attributes, not pixels.</p>
+                <div class="code-block">
+// MongoDB Document Field
+floorLayout: [
+  { id: 't1', x: 50, y: 100, shape: 'rect', rotation: 0 },
+  { id: 't2', x: 200, y: 150, shape: 'circle', rotation: 45 }
+]
+</div>
+
+                <div class="doc-h2">4.2 The Lifecycle</div>
+                <ul class="doc-ul">
+                    <li class="doc-li"><strong>Load:</strong> Fetch JSON -> Loop Array -> Instantiate Konva Nodes.</li>
+                    <li class="doc-li"><strong>Interact:</strong> `Konva.Transformer` handles the math for dragging and resizing.</li>
+                    <li class="doc-li"><strong>Save:</strong> Serialize Canvas State -> PUT to Backend -> Update Mongo Array.</li>
+                </ul>
+            </div>
+        </section>
+
+        <!-- 5. AUXILIARY -->
+        <section class="doc-section">
+            <div class="doc-content">
+                <div class="doc-h1">5. Auxiliary Systems</div>
+                <p class="doc-p">The "Glue" features that make the application robust.</p>
+
+                <div class="doc-h2">5.1 File Uploads (Multer)</div>
+                <p class="doc-p">Handles `multipart/form-data` for restaurant images. Saves files to `/uploads` with a timestamped filename.</p>
+
+                <div class="doc-h2">5.2 Email (Nodemailer)</div>
+                <p class="doc-p">Wrapped in `try/catch`. We attempt to send a receipt email, but if the SMTP server is down, we <strong>log the error</strong> and proceed. We do not crash the user's booking request.</p>
+
+                <div class="doc-h2">5.3 Flash Messages</div>
+                <p class="doc-p">Uses session storage to pass temporary messages ("Login Failed") between redirects.</p>
+            </div>
+        </section>
+
+        <!-- 6. INTERVIEW Q&A -->
+        <section class="doc-section">
+            <div class="doc-content">
+                <div class="doc-h1">6. Interview Defense</div>
+                
+                <div class="qa-box">
+                    <div class="q">Q: Why did you use MongoDB instead of SQL?</div>
+                    <div class="a">A: <strong>The Floor Plan.</strong> Storing complex, variable-length JSON arrays (the layout) is native in MongoDB. In SQL, I would have had to use a complex EAV pattern or store it as a string blob. MongoDB is faster for this specific data structure.</div>
+                </div>
+
+                <div class="qa-box">
+                    <div class="q">Q: How do you handle Socket Disconnects?</div>
+                    <div class="a">A: Socket.io handles reconnection automatically. In a production environment, I would add a "Sync State" API call on the `reconnect` event to fetch any bookings that might have occurred during the downtime.</div>
+                </div>
+
+                <div class="qa-box">
+                    <div class="q">Q: How do you scale this application?</div>
+                    <div class="a">A: 1. <strong>Session Store:</strong> Move sessions to Redis so all server instances share login state. <br>2. <strong>Socket Adapter:</strong> Use the Socket.io Redis Adapter so events broadcasted on Server A reach users connected to Server B.</div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        // --- UNIFIED SCROLL OBSERVER ---
+        // This handles highlighting for BOTH the TikTok cards AND the Manual sections
+        
+        const allSections = document.querySelectorAll('.tiktok-card, section.doc-section');
+        
+        const observerOptions = {
+            root: null,
+            threshold: 0.3, // Trigger when 30% of the item is visible
+            rootMargin: "-10% 0px -10% 0px"
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // Deactivate all
+                    allSections.forEach(s => s.classList.remove('active', 'active-card'));
+                    
+                    // Activate current (add both classes to cover both types)
+                    entry.target.classList.add('active');
+                    entry.target.classList.add('active-card');
+                }
+            });
+        }, observerOptions);
+
+        allSections.forEach(section => {
+            observer.observe(section);
+        });
+
+        // --- PROGRESS BAR ---
+        window.addEventListener('scroll', () => {
+            var winScroll = document.body.scrollTop || document.documentElement.scrollTop;
+            var height = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            var scrolled = (winScroll / height) * 100;
+            document.getElementById("progress").style.width = scrolled + "%";
+        });
+    </script>
+</body>
+</html>
